@@ -553,7 +553,7 @@ const MIN_ANALYSIS_SEC=2; // minimum seconds needed for valid analysis
 
 const POSE_CONN=[[0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[17,19],[12,14],[14,16],[16,18],[16,20],[16,22],[18,20],[11,23],[12,24],[23,24],[23,25],[24,26],[25,27],[26,28],[27,29],[28,30],[29,31],[30,32],[27,31],[28,32]];
 const JDEFS=[{key:'r_elbow',name:'右肘',pts:[12,14,16]},{key:'l_elbow',name:'左肘',pts:[11,13,15]},{key:'r_sh',name:'右肩',pts:[14,12,24]},{key:'l_sh',name:'左肩',pts:[13,11,23]},{key:'r_knee',name:'右膝',pts:[24,26,28]},{key:'l_knee',name:'左膝',pts:[23,25,27]},{key:'r_hip',name:'右股関節',pts:[12,24,26]},{key:'l_hip',name:'左股関節',pts:[11,23,25]}];
-const RADAR_LABELS=['体幹\n前傾','膝\n引き上げ','腕振り','左右\n対称','上下\n安定','ケイデンス'];
+const RADAR_LABELS=['体幹\n前傾','膝\n引き上げ','腕振り','着地\n位置','着地\n衝撃','上下\n安定','ケイデンス'];
 
 const RUN_TYPES={
   sprint:{label:'短距離系',cls:'rt-sprint',desc:'〜400m スプリント',trunk:{ideal:[10,20],low:'体幹をもっと前傾させてください（短距離は10〜20°が推進力に直結します）',high:'前傾しすぎです'},knee:{min:60,low:'短距離では膝を高く引き上げることが最重要です（目標60°以上）'},arm:{ideal:80,msg:'短距離では肘を約80°に固定し、力強く素早く振ることがスピードアップに繋がります'},cad:{ideal:195,low:'ケイデンスをさらに上げましょう（短距離の目標は190〜200+ spm）',high:''},vert:{limit:2.5,msg:'地面を力強く蹴ることで上下動を抑えつつ推進力を最大化できます'},hint:'短距離（〜400m）では爆発的な加速と最高速度の維持が重要。最初の10〜20mで前傾姿勢を保ち、徐々に上体を起こしていく走り方が基本です。'},
@@ -583,7 +583,7 @@ const cls2=s=>s>=80?'sg':s>=60?'so':'sb2';
 // ── Radar ──────────────────────────────────────────────────
 function drawRadar(scores){
   const canvas=document.getElementById('radar-canvas');if(!canvas)return;
-  const N=6,dpr=window.devicePixelRatio||1;
+  const N=7,dpr=window.devicePixelRatio||1;
   const size=Math.min(225,canvas.parentElement.clientWidth-14);
   canvas.style.width=size+'px';canvas.style.height=size+'px';
   canvas.width=size*dpr;canvas.height=size*dpr;
@@ -1268,7 +1268,7 @@ function finishAnalysis(side){
     const m=doAnalyze(h);
     if(!m){showStateWaiting();return;}
     showStateDone(h.length,m.camAngle,m.vertBias);
-    const scores=[m.trunk?.score??null,m.knee?.score??null,m.arm?.score??null,m.sym?.score??null,m.vert?.score??null,m.cad?.score??null];
+    const scores=[m.trunk?.score??null,m.knee?.score??null,m.arm?.score??null,m.overstride?.score??null,m.landingKnee?.score??null,m.vert?.score??null,m.cad?.score??null];
     drawRadar(scores);renderCards(m);renderAdvice(m);
     document.getElementById('state-done').scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -1278,7 +1278,7 @@ function finishAnalysis(side){
 function doAnalyze(h){
   if(h.length<10)return null;
   const cam=S.cameraAngle||0,vb=S.cameraVertBias||0;
-  return{trunk:calcTrunk(h,cam,vb),knee:calcKnee(h,cam),arm:calcArm(h,cam),sym:calcSym(h),vert:calcVert(h),cad:calcCad(h),camAngle:cam,vertBias:vb};
+  return{trunk:calcTrunk(h,cam,vb),knee:calcKnee(h,cam),arm:calcArm(h,cam),overstride:calcOverstride(h),landingKnee:calcLandingKnee(h),vert:calcVert(h),cad:calcCad(h),camAngle:cam,vertBias:vb};
 }
 function calcTrunk(h,camDeg=0,vertBias=0){
   const cosC=Math.max(0.1,Math.cos(camDeg*Math.PI/180));
@@ -1317,7 +1317,50 @@ function calcArm(h,camDeg=0){
   const score=cl(100-Math.abs(avg-90)*1.5-diff*0.5,0,100);
   return{ar,al,avg,diff,score};
 }
-function calcSym(h){const D=[];h.forEach(({lm})=>{const checks=[];if(ok(lm,12)&&ok(lm,24)&&ok(lm,26)&&ok(lm,11)&&ok(lm,23)&&ok(lm,25))checks.push(Math.abs(ang(lm[12],lm[24],lm[26])-ang(lm[11],lm[23],lm[25])));if(ok(lm,24)&&ok(lm,26)&&ok(lm,28)&&ok(lm,23)&&ok(lm,25)&&ok(lm,27))checks.push(Math.abs(ang(lm[24],lm[26],lm[28])-ang(lm[23],lm[25],lm[27])));if(checks.length)D.push(mn(checks));});if(!D.length)return null;const avg=mn(D),score=cl(100-avg*2,0,100);return{avg,score};}
+function calcOverstride(h){
+  const hX=h.map(({lm})=>ok(lm,23)&&ok(lm,24)?(lm[23].x+lm[24].x)/2:null).filter(v=>v!==null);
+  if(hX.length<8)return null;
+  const dir=hX[hX.length-1]>hX[0]?1:-1;
+  const strikes=[];
+  for(let i=2;i<h.length-2;i++){
+    const {lm}=h[i];
+    [[28,24],[27,23]].forEach(([ank,hip])=>{
+      if(!ok(lm,ank)||!ok(lm,hip))return;
+      const yP=h[i-1].lm[ank]?.y??0,yC=lm[ank].y,yN=h[i+1].lm[ank]?.y??0;
+      if(yC>yP&&yC>yN){
+        const legLen=Math.sqrt(Math.pow(lm[ank].x-lm[hip].x,2)+Math.pow(lm[ank].y-lm[hip].y,2));
+        if(legLen>0.05)strikes.push((lm[ank].x-lm[hip].x)*dir/legLen);
+      }
+    });
+  }
+  if(strikes.length<2){
+    const ratios=[];
+    h.forEach(({lm})=>{[[28,24],[27,23]].forEach(([ank,hip])=>{if(!ok(lm,ank)||!ok(lm,hip))return;const legLen=Math.sqrt(Math.pow(lm[ank].x-lm[hip].x,2)+Math.pow(lm[ank].y-lm[hip].y,2));if(legLen>0.05&&lm[ank].y>lm[hip].y)ratios.push((lm[ank].x-lm[hip].x)*dir/legLen);});});
+    if(ratios.length<4)return null;
+    ratios.sort((a,b)=>a-b);
+    const pct=cl(ratios[Math.floor(ratios.length*0.85)]*100,0,100);
+    const score=pct<=15?100:pct<=35?100-(pct-15)*2.5:cl(50-(pct-35)*2,0,100);
+    return{pct,score};
+  }
+  const pct=cl(mn(strikes)*100,0,100);
+  const score=pct<=15?100:pct<=35?100-(pct-15)*2.5:cl(50-(pct-35)*2,0,100);
+  return{pct,score};
+}
+function calcLandingKnee(h){
+  const strikes=[];
+  for(let i=2;i<h.length-2;i++){
+    const {lm}=h[i];
+    [[28,24,26],[27,23,25]].forEach(([ank,hip,kne])=>{
+      if(!ok(lm,ank)||!ok(lm,hip)||!ok(lm,kne))return;
+      const yP=h[i-1].lm[ank]?.y??0,yC=lm[ank].y,yN=h[i+1].lm[ank]?.y??0;
+      if(yC>yP&&yC>yN)strikes.push(ang(lm[hip],lm[kne],lm[ank]));
+    });
+  }
+  if(strikes.length<2)return null;
+  const flex=cl(180-mn(strikes),0,60);
+  const score=flex>=15&&flex<=35?100:flex<15?cl((flex/15)*80,0,100):cl(100-(flex-35)*3,0,100);
+  return{flex,score};
+}
 function calcVert(h){const Y=[],Hh=[];h.forEach(({lm})=>{if(ok(lm,23)&&ok(lm,24))Y.push((lm[23].y+lm[24].y)/2);if(ok(lm,0)&&ok(lm,27)&&ok(lm,28))Hh.push(Math.abs((lm[27].y+lm[28].y)/2-lm[0].y));});if(Y.length<8)return null;const dev=sd(Y),avgH=Hh.length?mn(Hh):1,pct=(dev/avgH)*100;const score=pct<=3?100:pct<=6?100-(pct-3)*10:cl(70-(pct-6)*12,0,100);return{pct,score};}
 function calcCad(h){if(h.length<24)return null;const vals=[],times=[];h.forEach(({t,lm})=>{if(ok(lm,23)&&ok(lm,25)){vals.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));times.push(t);}});if(vals.length<16)return null;const m=mn(vals);let cross=0;for(let i=1;i<vals.length;i++)if((vals[i-1]-m)*(vals[i]-m)<0)cross++;const span=(times[times.length-1]-times[0])/1000;if(span<1)return null;const spm=Math.round((cross/2/span)*60);if(spm<60||spm>240)return null;const score=spm>=170&&spm<=190?100:spm>=160&&spm<170?60+(spm-160)*4:spm>190&&spm<=200?100-(spm-190)*4:cl(100-Math.abs(spm-180)*1.2,0,100);return{spm,score};}
 
@@ -1453,12 +1496,55 @@ function svgCad(spm,score){
     <text x="70" y="88" fill="${tipC}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
 }
 
+function svgOverstride(pct,score){
+  const c=scCol(score),gY=76,hX=52,hY=34;
+  const ovrPx=Math.min(pct/100,0.7)*42;
+  const aX=hX+ovrPx;
+  const tip=pct<=15?'理想的な着地 ✓':pct<=30?'やや前着地':pct<=50?'前すぎ（膝の負担大）':'大きく前すぎ';
+  const tipC=pct<=15?'#00e5ff':c;
+  return svgW(`<line x1="5" y1="${gY}" x2="135" y2="${gY}" stroke="#1a1a4a" stroke-width="1.5"/>
+    <circle cx="${hX}" cy="${hY-14}" r="7" fill="none" stroke="#2a2a6a" stroke-width="1.8"/>
+    <line x1="${hX}" y1="${hY-7}" x2="${hX}" y2="${hY}" stroke="#2a2a6a" stroke-width="2"/>
+    <line x1="${hX}" y1="${hY}" x2="${hX}" y2="${gY}" stroke="#1e1e50" stroke-width="1" stroke-dasharray="2,3"/>
+    <ellipse cx="${hX}" cy="${gY}" rx="9" ry="3.5" fill="#00e5ff11" stroke="#00e5ff44" stroke-width="1.5" stroke-dasharray="4,2"/>
+    <text x="${hX}" y="${p(gY-7)}" fill="#00e5ff66" font-size="6" text-anchor="middle" font-family="sans-serif">理想</text>
+    <line x1="${hX}" y1="${hY}" x2="${p(aX)}" y2="${gY}" stroke="${c}" stroke-width="2.5"/>
+    <ellipse cx="${p(aX)}" cy="${gY}" rx="10" ry="4" fill="${c}22" stroke="${c}" stroke-width="2"/>
+    ${ovrPx>6?`<line x1="${hX}" y1="${p(gY+8)}" x2="${p(aX)}" y2="${p(gY+8)}" stroke="${c}" stroke-width="1.5"/>
+    <polygon points="${p(aX)},${p(gY+5)} ${p(aX+4)},${p(gY+8)} ${p(aX)},${p(gY+11)}" fill="${c}"/>
+    <text x="${p((hX+aX)/2)}" y="${p(gY+16)}" fill="${c}" font-size="6.5" text-anchor="middle" font-family="sans-serif">${pct.toFixed(0)}%前</text>`:''}
+    <text x="70" y="91" fill="${tipC}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
+}
+function svgLandingKnee(flex,score){
+  const c=scCol(score),gY=76;
+  const aX=65,aY=gY,shinL=24,thighL=26;
+  const shinA=-8*Math.PI/180;
+  const kX=aX+Math.sin(shinA)*shinL,kY=aY-Math.cos(shinA)*shinL;
+  const thighA=shinA-Math.min(flex,55)*Math.PI/180;
+  const hX=kX+Math.sin(thighA)*thighL,hY=kY-Math.cos(thighA)*thighL;
+  const iThighA=shinA-25*Math.PI/180;
+  const ihX=kX+Math.sin(iThighA)*thighL,ihY=kY-Math.cos(iThighA)*thighL;
+  const tip=flex<10?'膝が伸びすぎ（衝撃大）':flex<=35?'柔らかい着地 ✓':'膝の曲げすぎ';
+  const tipC=(flex>=15&&flex<=35)?'#00e5ff':c;
+  return svgW(`<line x1="5" y1="${gY}" x2="135" y2="${gY}" stroke="#1a1a4a" stroke-width="1.5"/>
+    <line x1="${p(kX)}" y1="${p(kY)}" x2="${p(ihX)}" y2="${p(ihY)}" stroke="#00e5ff33" stroke-width="1.8" stroke-dasharray="4,3"/>
+    <circle cx="${p(ihX)}" cy="${p(ihY)}" r="4" fill="#00e5ff11" stroke="#00e5ff44" stroke-width="1.5"/>
+    <text x="${p(ihX+6)}" y="${p(ihY+3)}" fill="#00e5ff66" font-size="6" font-family="sans-serif">理想25°</text>
+    <line x1="${p(aX)}" y1="${p(aY)}" x2="${p(kX)}" y2="${p(kY)}" stroke="${c}" stroke-width="2.5"/>
+    <line x1="${p(kX)}" y1="${p(kY)}" x2="${p(hX)}" y2="${p(hY)}" stroke="${c}" stroke-width="2.5"/>
+    <circle cx="${p(aX)}" cy="${p(aY)}" r="4" fill="${c}22" stroke="${c}" stroke-width="1.5"/>
+    <circle cx="${p(kX)}" cy="${p(kY)}" r="5" fill="${c}33" stroke="${c}" stroke-width="2"/>
+    <circle cx="${p(hX)}" cy="${p(hY)}" r="4" fill="#2a2a6a" stroke="#4a4a8a" stroke-width="1.5"/>
+    <text x="${p(kX-13)}" y="${p(kY+4)}" fill="${c}" font-size="7.5" font-family="sans-serif">${Math.round(flex)}°</text>
+    <text x="70" y="91" fill="${tipC}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
+}
 function metricSVG(key,m){
   try{
     if(key==='trunk'&&m.trunk)return svgTrunk(m.trunk.abs,m.trunk.score);
     if(key==='knee'&&m.knee)return svgKnee(m.knee.peak,m.knee.score);
     if(key==='arm'&&m.arm)return svgArm(m.arm.avg,m.arm.score);
-    if(key==='sym'&&m.sym)return svgSym(m.sym.avg,m.sym.score);
+    if(key==='overstride'&&m.overstride)return svgOverstride(m.overstride.pct,m.overstride.score);
+    if(key==='landingKnee'&&m.landingKnee)return svgLandingKnee(m.landingKnee.flex,m.landingKnee.score);
     if(key==='vert'&&m.vert)return svgVert(m.vert.pct,m.vert.score);
     if(key==='cad'&&m.cad)return svgCad(m.cad.spm,m.cad.score);
   }catch(e){}
@@ -1471,7 +1557,8 @@ function renderCards(m){
     {key:'trunk',name:'体幹前傾角',desc:'重力を推進力に変換。省エネな走りの土台',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
     {key:'knee',name:'膝の引き上げ',desc:'歩幅と推進力に影響。スピードアップの鍵',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想40°+',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
     {key:'arm',name:'腕振り角度',desc:'体幹の回転を抑えバランスとリズムを安定させる',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
-    {key:'sym',name:'左右対称性',desc:'筋力・柔軟性の左右差を反映。非対称はケガの予兆',val:m.sym?`${Math.round(m.sym.score)}%`:'--',unit:'左右の差',sc:m.sym?.score??null,lbl:m.sym?(m.sym.avg<8?'対称':'非対称あり'):'--'},
+    {key:'overstride',name:'着地位置',desc:'足が重心より前すぎると膝・股関節への衝撃が増大し怪我の原因に。重心直下での着地が理想',val:m.overstride?`${m.overstride.pct.toFixed(0)}%`:'--',unit:'前方オフセット <15%',sc:m.overstride?.score??null,lbl:m.overstride?(m.overstride.pct<=15?'理想的':m.overstride.pct<=30?'やや前':'前すぎ'):'--'},
+    {key:'landingKnee',name:'着地時膝屈曲',desc:'着地の瞬間に膝が適度に曲がると衝撃を吸収しケガを防ぐ。伸びきった状態での着地は危険',val:m.landingKnee?`${m.landingKnee.flex.toFixed(0)}°`:'--',unit:'理想15〜35°',sc:m.landingKnee?.score??null,lbl:m.landingKnee?(m.landingKnee.flex>=15&&m.landingKnee.flex<=35?'理想的':m.landingKnee.flex<15?'伸びすぎ':'曲げすぎ'):'--'},
     {key:'vert',name:'上下動',desc:'前進に使われない縦方向のエネルギーロス。スタミナに影響',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
     {key:'cad',name:'ケイデンス',desc:'着地衝撃とケガ予防に影響。高いほど膝・腰への負担が小さい',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
   ];
@@ -1488,9 +1575,10 @@ function renderAdvice(m){
   if(m.knee){const{peak,mr,ml}=m.knee,minK=rt.knee.min;if(peak>=minK)items.push({t:'good',text:`${tn}膝の引き上げは十分です（最大${peak.toFixed(0)}°）。`});else items.push({t:peak<minK-15?'bad':'warn',text:`${tn}${rt.knee.low}（現在${peak.toFixed(0)}°）`});if(mr>0&&ml>0&&Math.abs(mr-ml)>15)items.push({t:'warn',text:`左右の膝引き上げに差があります（右${mr.toFixed(0)}° / 左${ml.toFixed(0)}°）。`});}
   if(m.arm){const{avg,diff}=m.arm,ia=rt.arm.ideal;if(Math.abs(avg-ia)<=12)items.push({t:'good',text:`${tn}腕の振り方は良好です（肘角度${avg.toFixed(0)}°）。${rt.arm.msg}`});else if(avg>ia+12)items.push({t:'warn',text:`${tn}肘が伸びすぎています（${avg.toFixed(0)}°、目標${ia}°前後）。${rt.arm.msg}`});else items.push({t:'warn',text:`${tn}肘を少し伸ばしましょう（${avg.toFixed(0)}°、目標${ia}°前後）。${rt.arm.msg}`});if(diff>15)items.push({t:'warn',text:`左右の腕振りに差があります（差${diff.toFixed(0)}°）。骨盤の傾きや腰痛の原因になります。`});}
   if(m.vert){const{pct}=m.vert,lim=rt.vert.limit;if(pct<=lim)items.push({t:'good',text:`${tn}上下動が少なく効率的です（${pct.toFixed(1)}%、目標${lim}%以下）。`});else if(pct>lim*2)items.push({t:'bad',text:`${tn}上下動が大きすぎます（${pct.toFixed(1)}%）。${rt.vert.msg}`});else items.push({t:'warn',text:`${tn}上下動をもう少し抑えましょう（${pct.toFixed(1)}%、目標${lim}%以下）。${rt.vert.msg}`});}
-  if(m.sym){const{avg,score}=m.sym;if(score>=85)items.push({t:'good',text:'左右の動きが対称でバランスよく走れています。'});else items.push({t:score>=60?'warn':'bad',text:`左右の動きに非対称があります（差${avg.toFixed(1)}°）。ストレッチや片脚トレーニングで改善できます。`});}
+  if(m.overstride){const{pct}=m.overstride;if(pct<=15)items.push({t:'good',text:`着地位置が理想的です（重心の${pct.toFixed(0)}%前方）。膝・股関節への衝撃が少ない効率的な着地です。`});else if(pct<=35)items.push({t:'warn',text:`やや前着地気味です（重心の${pct.toFixed(0)}%前方）。歩幅を少し縮め、足を重心直下に落とすイメージで走りましょう。`});else items.push({t:'bad',text:`オーバーストライドです（重心の${pct.toFixed(0)}%前方）。ブレーキがかかり膝への衝撃が大きい状態です。ケイデンスを上げて歩幅を縮めましょう。`});}
+  if(m.landingKnee){const{flex}=m.landingKnee;if(flex>=15&&flex<=35)items.push({t:'good',text:`着地時の膝屈曲が理想的です（${flex.toFixed(0)}°）。衝撃をしっかり吸収できています。`});else if(flex<15)items.push({t:flex<8?'bad':'warn',text:`着地時に膝が伸びすぎています（屈曲${flex.toFixed(0)}°）。かかと着地になっている可能性があります。ミッドフット着地を意識し、着地の瞬間に膝を曲げて衝撃を吸収しましょう。`});else items.push({t:'warn',text:`着地時の膝の曲がりがやや大きいです（屈曲${flex.toFixed(0)}°）。重心が下がりエネルギーロスにつながります。`});}
   if(m.cad){const{spm}=m.cad,ideal=rt.cad.ideal;if(Math.abs(spm-ideal)<=10)items.push({t:'good',text:`${tn}ケイデンスは理想的です（${spm} spm）。`});else if(spm<ideal-10)items.push({t:spm<ideal-25?'bad':'warn',text:`${tn}${rt.cad.low}（現在${spm} spm、目標${ideal} spm前後）。メトロノームアプリでリズムを覚えると効果的です。`});else items.push({t:'warn',text:`${tn}${rt.cad.high||`ケイデンスがやや高めです（${spm} spm）。`}`});}
-  if(g){const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.sym?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);if(allSc.length){const ov=Math.round(mn(allSc));const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、特に膝引き上げと腕振りのリズムを意識して練習しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを鍛えましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離を走るには省エネフォームの習得が最優先です。`;items.push({t:ov>=80?'good':ov>=60?'warn':'bad',text:`【総合】フォームスコア${ov}%。${pn}`});}}
+  if(g){const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);if(allSc.length){const ov=Math.round(mn(allSc));const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、特に膝引き上げと腕振りのリズムを意識して練習しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを鍛えましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離を走るには省エネフォームの習得が最優先です。`;items.push({t:ov>=80?'good':ov>=60?'warn':'bad',text:`【総合】フォームスコア${ov}%。${pn}`});}}
   document.getElementById('run-advice').innerHTML=items.length?items.map(i=>`<div class="ai ${i.t==='good'?'':i.t}"><span class="aicon">${I[i.t]}</span><span>${i.text}</span></div>`).join(''):'<div class="advph">フォームが検出できませんでした。カメラの角度や照明を確認してください。</div>';
 }
 
@@ -1529,7 +1617,7 @@ window.addEventListener('load',()=>{
 });
 document.getElementById('left-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('left');});
 document.getElementById('right-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('right');});
-window.addEventListener('resize',()=>{drawRadar([null,null,null,null,null,null]);});
+window.addEventListener('resize',()=>{drawRadar([null,null,null,null,null,null,null]);});
 
 // Range selector drag events
 document.addEventListener('mousemove',rsMove);
