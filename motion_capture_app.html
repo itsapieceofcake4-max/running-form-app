@@ -1310,17 +1310,126 @@ function calcSym(h){const D=[];h.forEach(({lm})=>{const checks=[];if(ok(lm,12)&&
 function calcVert(h){const Y=[],Hh=[];h.forEach(({lm})=>{if(ok(lm,23)&&ok(lm,24))Y.push((lm[23].y+lm[24].y)/2);if(ok(lm,0)&&ok(lm,27)&&ok(lm,28))Hh.push(Math.abs((lm[27].y+lm[28].y)/2-lm[0].y));});if(Y.length<8)return null;const dev=sd(Y),avgH=Hh.length?mn(Hh):1,pct=(dev/avgH)*100;const score=pct<=3?100:pct<=6?100-(pct-3)*10:cl(70-(pct-6)*12,0,100);return{pct,score};}
 function calcCad(h){if(h.length<24)return null;const vals=[],times=[];h.forEach(({t,lm})=>{if(ok(lm,23)&&ok(lm,25)){vals.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));times.push(t);}});if(vals.length<16)return null;const m=mn(vals);let cross=0;for(let i=1;i<vals.length;i++)if((vals[i-1]-m)*(vals[i]-m)<0)cross++;const span=(times[times.length-1]-times[0])/1000;if(span<1)return null;const spm=Math.round((cross/2/span)*60);if(spm<60||spm>240)return null;const score=spm>=170&&spm<=190?100:spm>=160&&spm<170?60+(spm-160)*4:spm>190&&spm<=200?100-(spm-190)*4:cl(100-Math.abs(spm-180)*1.2,0,100);return{spm,score};}
 
+// ── Metric SVG Diagrams ────────────────────────────────────
+function scCol(s){return s>=80?'#00e5ff':s>=50?'#ffd54f':'#ff4081';}
+function svgW(inner){return `<svg viewBox="0 0 120 78" width="100%" style="max-width:120px;display:block;margin:5px auto 2px;overflow:visible">${inner}</svg>`;}
+
+function svgTrunk(abs,score){
+  const c=scCol(score),f=v=>v.toFixed(1),R=Math.min(abs,38)*Math.PI/180,cx=44,gy=62,L=38;
+  const sx=f(cx+Math.sin(R)*L),sy=f(gy-Math.cos(R)*L),hx=f(cx+Math.sin(R)*(L+9)),hy=f(gy-Math.cos(R)*(L+9));
+  const r5x=f(cx+Math.sin(5*Math.PI/180)*L),r5y=f(gy-Math.cos(5*Math.PI/180)*L);
+  const r15x=f(cx+Math.sin(15*Math.PI/180)*L),r15y=f(gy-Math.cos(15*Math.PI/180)*L);
+  const tip=abs<5?'▶ 前に傾けて':abs>15?'◀ 少し起こして':'';
+  return svgW(`<line x1="5" y1="${gy}" x2="82" y2="${gy}" stroke="#1a1a4a" stroke-width="1.5"/>
+    <line x1="${cx}" y1="${gy}" x2="${cx}" y2="${gy-52}" stroke="#1e1e50" stroke-width="1" stroke-dasharray="2,3"/>
+    <path d="M ${cx} ${gy} L ${r5x} ${r5y} A ${L} ${L} 0 0 1 ${r15x} ${r15y} Z" fill="#00e5ff18" stroke="#00e5ff44" stroke-width="1"/>
+    <line x1="${cx}" y1="${gy}" x2="${sx}" y2="${sy}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="${hx}" cy="${hy}" r="5.5" fill="none" stroke="${c}" stroke-width="2.5"/>
+    <circle cx="${cx}" cy="${gy}" r="3" fill="${c}"/>
+    <text x="104" y="28" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">5〜15°</text>
+    <text x="104" y="37" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">が理想</text>
+    ${tip?`<text x="${cx+2}" y="76" fill="${c}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`:''}`);
+}
+
+function svgKnee(peak,score){
+  const c=scCol(score),f=v=>v.toFixed(1),hx=42,hy=54,L=30;
+  const PR=Math.min(Math.max(peak,0),75)*Math.PI/180,IR=40*Math.PI/180;
+  const kx=f(hx+Math.sin(PR)*L),ky=f(hy-Math.cos(PR)*L);
+  const ix=f(hx+Math.sin(IR)*L),iy=f(hy-Math.cos(IR)*L);
+  const tip=peak<40?'▲ 膝を高く引き上げて':'';
+  return svgW(`<line x1="5" y1="68" x2="86" y2="68" stroke="#1a1a4a" stroke-width="1.5"/>
+    <line x1="${hx}" y1="68" x2="${hx}" y2="${hy}" stroke="#2a2a6a" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${hx}" cy="${hy}" r="4" fill="#2a2a5a"/>
+    <line x1="${hx}" y1="${hy}" x2="${ix}" y2="${iy}" stroke="#00e5ff33" stroke-width="4" stroke-linecap="round" stroke-dasharray="5,3"/>
+    <circle cx="${ix}" cy="${iy}" r="4" fill="none" stroke="#00e5ff44" stroke-width="1.5"/>
+    <line x1="${hx}" y1="${hy}" x2="${kx}" y2="${ky}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="${kx}" cy="${ky}" r="4.5" fill="${c}" opacity=".85"/>
+    <text x="105" y="28" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">40°+</text>
+    <text x="105" y="37" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">が理想</text>
+    ${tip?`<text x="52" y="76" fill="${c}" font-size="7.5" text-anchor="middle" font-family="sans-serif">${tip}</text>`:''}`);
+}
+
+function svgArm(avg,score){
+  const c=scCol(score),f=v=>v.toFixed(1),L=26,ex=32,ey=44;
+  const fDx=Math.sin(avg*Math.PI/180),fDy=-Math.cos(avg*Math.PI/180);
+  const fx=f(ex+fDx*L),fy=f(ey+fDy*L),ix=f(ex+L);
+  const tip=avg>100?'▲ 肘をもっと曲げて':avg<80?'▼ 肘をもう少し伸ばして':'';
+  return svgW(`<circle cx="32" cy="18" r="6" fill="none" stroke="#2a2a6a" stroke-width="2.5"/>
+    <line x1="32" y1="24" x2="${ex}" y2="${ey}" stroke="#2a2a6a" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="${ex}" cy="${ey}" r="4" fill="#2a2a5a"/>
+    <line x1="${ex}" y1="${ey}" x2="${ix}" y2="${ey}" stroke="#00e5ff33" stroke-width="4" stroke-linecap="round" stroke-dasharray="5,3"/>
+    <line x1="${ex}" y1="${ey}" x2="${fx}" y2="${fy}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="${fx}" cy="${fy}" r="3.5" fill="${c}" opacity=".85"/>
+    <text x="108" y="46" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">90°</text>
+    <text x="108" y="55" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">が理想</text>
+    ${tip?`<text x="65" y="76" fill="${c}" font-size="7" text-anchor="middle" font-family="sans-serif">${tip}</text>`:''}`);
+}
+
+function svgSym(avg,score){
+  const c=scCol(score),f=v=>v.toFixed(1),cx=60,cy=30,L=26;
+  const lA=30*Math.PI/180,rA=(30+Math.min(avg*0.5,18))*Math.PI/180;
+  const lx=f(cx-Math.sin(lA)*L),ly=f(cy+Math.cos(lA)*L);
+  const rx=f(cx+Math.sin(rA)*L),ry=f(cy+Math.cos(rA)*L);
+  const ok=score>=80;
+  return svgW(`<circle cx="${cx}" cy="${cy-14}" r="6" fill="none" stroke="#2a2a6a" stroke-width="2.5"/>
+    <line x1="${cx}" y1="${cy-8}" x2="${cx}" y2="${cy}" stroke="#2a2a6a" stroke-width="3"/>
+    <line x1="${cx-18}" y1="${cy-4}" x2="${cx+18}" y2="${cy-4}" stroke="#2a2a6a" stroke-width="2.5"/>
+    <line x1="${cx}" y1="${cy}" x2="${lx}" y2="${ly}" stroke="${ok?c:'#00e5ff88'}" stroke-width="4" stroke-linecap="round"/>
+    <line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
+    <text x="${cx}" y="74" fill="${ok?'#00e5ff88':c}" font-size="7.5" text-anchor="middle" font-family="sans-serif">${ok?'左右対称 ✓':'差 '+avg.toFixed(0)+'° → 左右を揃えて'}</text>`);
+}
+
+function svgVert(pct,score){
+  const c=scCol(score),midY=36,amp=Math.min(pct*3.5,22),iAmp=8;
+  const xs=Array.from({length:19},(_,i)=>10+i*5);
+  const wave=xs.map((x,i)=>`${x},${(midY-amp*Math.sin(i*Math.PI/3)).toFixed(1)}`).join(' L ');
+  const ideal=xs.map((x,i)=>`${x},${(midY-iAmp*Math.sin(i*Math.PI/3)).toFixed(1)}`).join(' L ');
+  const tip=pct>4?'上下に跳ねすぎ → 水平に走って':'';
+  return svgW(`<line x1="5" y1="65" x2="112" y2="65" stroke="#1a1a4a" stroke-width="1.5"/>
+    <path d="M ${ideal}" fill="none" stroke="#00e5ff33" stroke-width="2" stroke-dasharray="5,3"/>
+    <path d="M ${wave}" fill="none" stroke="${c}" stroke-width="2.5"/>
+    <text x="7" y="17" fill="#00e5ff55" font-size="6.5" font-family="sans-serif">理想</text>
+    <text x="60" y="76" fill="${tip?c:'#00e5ff88'}" font-size="7" text-anchor="middle" font-family="sans-serif">${tip||'安定した走り ✓'}</text>`);
+}
+
+function svgCad(spm,score){
+  const c=scCol(score),iSp=18,aSp=180/Math.max(spm,60)*iSp,ys=[34,54];
+  const iSteps=[10,28,46,64,82];
+  const aSteps=[];for(let i=0;i<7;i++){const x=10+i*aSp;if(x>108)break;aSteps.push(x);}
+  const tip=spm<160?'▶ もっと細かく踏んで':spm>200?'もう少しゆっくり':'';
+  return svgW(`<line x1="5" y1="44" x2="110" y2="44" stroke="#1a1a4a" stroke-width="1"/>
+    ${iSteps.map((x,i)=>`<circle cx="${x}" cy="${ys[i%2]}" r="5.5" fill="#00e5ff18" stroke="#00e5ff44" stroke-width="1.5"/>`).join('')}
+    ${aSteps.map((x,i)=>`<circle cx="${x.toFixed(1)}" cy="${ys[i%2]}" r="5.5" fill="${c}33" stroke="${c}" stroke-width="2"/>`).join('')}
+    <text x="60" y="75" fill="${tip?c:'#00e5ff88'}" font-size="7.5" text-anchor="middle" font-family="sans-serif">${tip||'理想ペース ✓'}</text>`);
+}
+
+function metricSVG(key,m){
+  try{
+    if(key==='trunk'&&m.trunk)return svgTrunk(m.trunk.abs,m.trunk.score);
+    if(key==='knee'&&m.knee)return svgKnee(m.knee.peak,m.knee.score);
+    if(key==='arm'&&m.arm)return svgArm(m.arm.avg,m.arm.score);
+    if(key==='sym'&&m.sym)return svgSym(m.sym.avg,m.sym.score);
+    if(key==='vert'&&m.vert)return svgVert(m.vert.pct,m.vert.score);
+    if(key==='cad'&&m.cad)return svgCad(m.cad.spm,m.cad.score);
+  }catch(e){}
+  return '';
+}
+
 // ── Render results ─────────────────────────────────────────
 function renderCards(m){
   const cards=[
-    {name:'体幹前傾角',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
-    {name:'膝の引き上げ',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想40°+',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
-    {name:'腕振り角度',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
-    {name:'左右対称性',val:m.sym?`${Math.round(m.sym.score)}%`:'--',unit:'左右の差',sc:m.sym?.score??null,lbl:m.sym?(m.sym.avg<8?'対称':'非対称あり'):'--'},
-    {name:'上下動',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
-    {name:'ケイデンス',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
+    {key:'trunk',name:'体幹前傾角',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
+    {key:'knee',name:'膝の引き上げ',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想40°+',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
+    {key:'arm',name:'腕振り角度',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
+    {key:'sym',name:'左右対称性',val:m.sym?`${Math.round(m.sym.score)}%`:'--',unit:'左右の差',sc:m.sym?.score??null,lbl:m.sym?(m.sym.avg<8?'対称':'非対称あり'):'--'},
+    {key:'vert',name:'上下動',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
+    {key:'cad',name:'ケイデンス',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
   ];
-  document.getElementById('metric-grid').innerHTML=cards.map(c=>{const sc=c.sc??0,clr=c.sc!==null?col(sc):'#404060';return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div><div class="mc-lbl">${c.lbl}</div></div>`;}).join('');
+  document.getElementById('metric-grid').innerHTML=cards.map(c=>{
+    const sc=c.sc??0,clr=c.sc!==null?col(sc):'#404060';
+    const diag=metricSVG(c.key,m);
+    return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div>${diag}<div class="mc-lbl">${c.lbl}</div></div>`;
+  }).join('');
 }
 function renderAdvice(m){
   const items=[],I={good:'✅',warn:'⚠️',bad:'❌'};
