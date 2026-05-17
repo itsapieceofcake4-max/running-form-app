@@ -176,6 +176,20 @@ input:checked+.sws:before{transform:translateX(15px)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lt{font-size:.82rem;color:#8080b0;text-align:center;padding:0 20px}
 
+/* Range input global style */
+input[type="range"]{-webkit-appearance:none;height:4px;border-radius:4px;background:#1e1e40;outline:none;cursor:pointer}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#00e5ff;cursor:pointer;border:2px solid #00b8d4;box-shadow:0 0 4px #00e5ff44}
+input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#00e5ff;cursor:pointer;border:2px solid #00b8d4;box-shadow:none}
+
+/* ── Camera Angle Correction ── */
+.cam-corr-bar{background:#12122a;border:1px solid #2a2a5a;border-radius:12px;padding:10px 13px;display:flex;flex-direction:column;gap:8px}
+.cam-corr-bar h3{font-size:.86rem;color:#c0c0e0}
+.cam-corr-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cam-angle-lbl{font-size:.66rem;color:#5060a0;white-space:nowrap;min-width:42px}
+.cam-angle-val{font-size:.96rem;font-weight:700;color:#00e5ff;min-width:36px;text-align:right}
+.cam-corr-info{font-size:.71rem;color:#6080a0;padding:6px 10px;background:#0a0a1f;border-radius:7px;line-height:1.5}
+.cam-corr-info span{color:#00e5ff;font-weight:700}
+
 /* ── Range Selector ── */
 .range-sel{padding:7px 12px 9px;background:#0d0d20;border-top:1px solid #1a1a3a;display:none}
 .range-sel.show{display:block}
@@ -348,6 +362,19 @@ input:checked+.sws:before{transform:translateX(15px)}
     </div>
   </div>
 
+  <!-- Camera Angle Correction -->
+  <div class="cam-corr-bar">
+    <h3>📐 撮影角度補正</h3>
+    <div class="cam-corr-row">
+      <span class="cam-angle-lbl">真横 0°</span>
+      <input type="range" id="cam-slider" min="0" max="75" value="0" step="5" style="flex:1;min-width:100px" oninput="setCamAngle(+this.value)">
+      <span class="cam-angle-lbl" style="text-align:right">正面 75°</span>
+      <div id="cam-disp" class="cam-angle-val">0°</div>
+      <button class="bc" id="cam-auto-btn" onclick="autoDetectCamAngle()">🔍 自動検出</button>
+    </div>
+    <div class="cam-corr-info" id="cam-corr-info">真横から撮影できている場合は <span>0°</span> のままで構いません。斜め前方から撮影した場合はスライダーで角度を指定するか、動画解析後に「自動検出」を押してください。</div>
+  </div>
+
   <!-- Goal -->
   <div class="goal-bar">
     <h3>🎯 目標設定</h3>
@@ -490,7 +517,7 @@ const S={
   left:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null,rangeStart:0,rangeEnd:null,duration:0},
   right:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null,rangeStart:0,rangeEnd:null,duration:0},
   playing:false,showSkeleton:true,showVideo:true,
-  animId:null,lastT:0,mode:'running',panel:'left'
+  animId:null,lastT:0,mode:'running',panel:'left',cameraAngle:0
 };
 const HIST={left:[],right:[]};
 let rsD=null; // active drag: {side,which,left,w}
@@ -553,6 +580,55 @@ function updateGoal(){
   document.getElementById('goal-hint').textContent=g.def.hint;
 }
 
+// ── Camera Angle Correction ───────────────────────────────
+// When camera is at angle θ from side view, horizontal (sagittal) components
+// appear compressed by cos(θ). We divide by cos(θ) to recover true values.
+function camCorrAngle(measuredDeg, camDeg){
+  if(camDeg<1)return measuredDeg;
+  const cosC=Math.cos(camDeg*Math.PI/180);
+  if(cosC<0.1)return measuredDeg; // near 90°, correction unreliable
+  const r=Math.tan(measuredDeg*Math.PI/180)/cosC;
+  return Math.atan(r)*180/Math.PI;
+}
+// Corrected ang() – scales x-components before computing joint angle
+function angCorr(a,b,c,cosC){
+  const bax=(a.x-b.x)/cosC,bay=a.y-b.y;
+  const bcx=(c.x-b.x)/cosC,bcy=c.y-b.y;
+  const d=bax*bcx+bay*bcy,m=Math.sqrt(bax**2+bay**2)*Math.sqrt(bcx**2+bcy**2);
+  return m?Math.acos(Math.max(-1,Math.min(1,d/m)))*180/Math.PI:0;
+}
+function setCamAngle(deg){
+  S.cameraAngle=deg;
+  document.getElementById('cam-slider').value=deg;
+  document.getElementById('cam-disp').textContent=deg+'°';
+  const corr=deg<1?1:(1/Math.cos(deg*Math.PI/180));
+  let info;
+  if(deg===0)info='真横から撮影できている場合は <span>0°</span> のままで構いません。斜め前方から撮影した場合はスライダーで角度を指定するか、動画解析後に「自動検出」を押してください。';
+  else info=`撮影角度 <span>${deg}°</span> で補正中（水平成分を ×<span>${corr.toFixed(2)}</span> に拡大）。体幹前傾・膝引き上げ・腕振りに適用されます。`;
+  document.getElementById('cam-corr-info').innerHTML=info;
+}
+function autoDetectCamAngle(){
+  const h=HIST[S.panel];
+  if(h.length<10){alert('先に動画を解析してから「自動検出」を押してください。');return;}
+  // Estimate angle from shoulder-width / torso-height ratio
+  // At 90° front view, ratio ≈ 0.65; at 0° side view, ratio ≈ 0
+  const ratios=[];
+  h.forEach(({lm})=>{
+    if(!ok(lm,11)||!ok(lm,12)||!ok(lm,23)||!ok(lm,24))return;
+    const sw=Math.abs(lm[11].x-lm[12].x);
+    const th=Math.abs((lm[11].y+lm[12].y)/2-(lm[23].y+lm[24].y)/2);
+    if(th>0.03)ratios.push(sw/th);
+  });
+  if(!ratios.length){alert('体の検出ができませんでした。カメラの角度や照明を確認してください。');return;}
+  ratios.sort((a,b)=>a-b);
+  const med=ratios[Math.floor(ratios.length/2)];
+  const FRONT_RATIO=0.65; // shoulder_w/torso_h at 90° front view
+  const sinT=Math.min(0.98,Math.max(0,med/FRONT_RATIO));
+  const estDeg=Math.round(Math.asin(sinT)*180/Math.PI/5)*5;
+  setCamAngle(estDeg);
+  alert(`カメラ角度を約 ${estDeg}° と推定しました。\n（肩幅/体幹比率: ${med.toFixed(2)}）\n\n実際の撮影角度と合わない場合はスライダーで手動調整してください。`);
+}
+
 // ── Pose ──────────────────────────────────────────────────
 function mkPose(side){
   const p=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`});
@@ -605,11 +681,12 @@ function showStateCollecting(isCamera){
     ?'「録画停止」または「今すぐ分析」を押すと結果が表示されます'
     :'動画が終わると自動で分析が始まります（「今すぐ分析」でいつでも確認できます）';
 }
-function showStateDone(frameCount){
+function showStateDone(frameCount,camAngle=0){
   document.getElementById('state-waiting').style.display='none';
   document.getElementById('state-collecting').style.display='none';
   document.getElementById('state-done').style.display='';
-  document.getElementById('done-frames').textContent=frameCount+'フレームを分析（'+Math.round(frameCount*FRAME_MS/1000)+'秒分）';
+  const corrTxt=camAngle>0?` ／ 📐 角度補正 ${camAngle}°適用`:'';
+  document.getElementById('done-frames').textContent=frameCount+'フレームを分析（'+Math.round(frameCount*FRAME_MS/1000)+'秒分）'+corrTxt;
 }
 
 function updateCollectionUI(side){
@@ -925,7 +1002,7 @@ function finishAnalysis(side){
     }
     const m=doAnalyze(h);
     if(!m){showStateWaiting();return;}
-    showStateDone(h.length);
+    showStateDone(h.length,m.camAngle);
     const scores=[m.trunk?.score??null,m.knee?.score??null,m.arm?.score??null,m.sym?.score??null,m.vert?.score??null,m.cad?.score??null];
     drawRadar(scores);renderCards(m);renderAdvice(m);
     document.getElementById('state-done').scrollIntoView({behavior:'smooth',block:'start'});
@@ -935,11 +1012,46 @@ function finishAnalysis(side){
 // ── Running metrics ────────────────────────────────────────
 function doAnalyze(h){
   if(h.length<10)return null;
-  return{trunk:calcTrunk(h),knee:calcKnee(h),arm:calcArm(h),sym:calcSym(h),vert:calcVert(h),cad:calcCad(h)};
+  const cam=S.cameraAngle||0;
+  return{trunk:calcTrunk(h,cam),knee:calcKnee(h,cam),arm:calcArm(h,cam),sym:calcSym(h),vert:calcVert(h),cad:calcCad(h),camAngle:cam};
 }
-function calcTrunk(h){const a=h.map(({lm})=>{if(!ok(lm,11)||!ok(lm,12)||!ok(lm,23)||!ok(lm,24))return null;const sx=(lm[11].x+lm[12].x)/2,hy=(lm[23].y+lm[24].y)/2,hx=(lm[23].x+lm[24].x)/2;return Math.atan2(sx-hx,hy-(lm[11].y+lm[12].y)/2)*180/Math.PI;}).filter(v=>v!==null);if(!a.length)return null;const avg=mn(a),abs=Math.abs(avg),dev=sd(a);const score=abs>=5&&abs<=15?100:abs<5?cl(50+(abs/5)*50,0,100):cl(100-((abs-15)/15)*100,0,100);return{avg,abs,dev,score};}
-function calcKnee(h){const R=[],L=[];h.forEach(({lm})=>{if(ok(lm,24)&&ok(lm,26))R.push(Math.abs(Math.atan2(lm[26].x-lm[24].x,lm[24].y-lm[26].y)*180/Math.PI));if(ok(lm,23)&&ok(lm,25))L.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));});if(!R.length&&!L.length)return null;const mr=R.length?Math.max(...R):0,ml=L.length?Math.max(...L):0,peak=Math.max(mr,ml);const score=peak>=50?100:peak>=35?60+(peak-35)/15*40:cl((peak/35)*60,0,100);return{mr,ml,peak,score};}
-function calcArm(h){const R=[],L=[];h.forEach(({lm})=>{if(ok(lm,12)&&ok(lm,14)&&ok(lm,16))R.push(ang(lm[12],lm[14],lm[16]));if(ok(lm,11)&&ok(lm,13)&&ok(lm,15))L.push(ang(lm[11],lm[13],lm[15]));});if(!R.length&&!L.length)return null;const ar=R.length?mn(R):null,al=L.length?mn(L):null,avg=(ar!==null&&al!==null)?(ar+al)/2:(ar??al),diff=ar!==null&&al!==null?Math.abs(ar-al):0;const score=cl(100-Math.abs(avg-90)*1.5-diff*0.5,0,100);return{ar,al,avg,diff,score};}
+function calcTrunk(h,camDeg=0){
+  const cosC=Math.max(0.1,Math.cos(camDeg*Math.PI/180));
+  const a=h.map(({lm})=>{
+    if(!ok(lm,11)||!ok(lm,12)||!ok(lm,23)||!ok(lm,24))return null;
+    const sx=(lm[11].x+lm[12].x)/2,hy=(lm[23].y+lm[24].y)/2,hx=(lm[23].x+lm[24].x)/2;
+    const dx=(sx-hx)/cosC, dy=hy-(lm[11].y+lm[12].y)/2; // correct sagittal component
+    return Math.atan2(dx,dy)*180/Math.PI;
+  }).filter(v=>v!==null);
+  if(!a.length)return null;
+  const avg=mn(a),abs=Math.abs(avg),dev=sd(a);
+  const score=abs>=5&&abs<=15?100:abs<5?cl(50+(abs/5)*50,0,100):cl(100-((abs-15)/15)*100,0,100);
+  return{avg,abs,dev,score};
+}
+function calcKnee(h,camDeg=0){
+  const cosC=Math.max(0.1,Math.cos(camDeg*Math.PI/180));
+  const R=[],L=[];
+  h.forEach(({lm})=>{
+    if(ok(lm,24)&&ok(lm,26))R.push(Math.abs(Math.atan2((lm[26].x-lm[24].x)/cosC,lm[24].y-lm[26].y)*180/Math.PI));
+    if(ok(lm,23)&&ok(lm,25))L.push(Math.abs(Math.atan2((lm[25].x-lm[23].x)/cosC,lm[23].y-lm[25].y)*180/Math.PI));
+  });
+  if(!R.length&&!L.length)return null;
+  const mr=R.length?Math.max(...R):0,ml=L.length?Math.max(...L):0,peak=Math.max(mr,ml);
+  const score=peak>=50?100:peak>=35?60+(peak-35)/15*40:cl((peak/35)*60,0,100);
+  return{mr,ml,peak,score};
+}
+function calcArm(h,camDeg=0){
+  const cosC=Math.max(0.1,Math.cos(camDeg*Math.PI/180));
+  const R=[],L=[];
+  h.forEach(({lm})=>{
+    if(ok(lm,12)&&ok(lm,14)&&ok(lm,16))R.push(angCorr(lm[12],lm[14],lm[16],cosC));
+    if(ok(lm,11)&&ok(lm,13)&&ok(lm,15))L.push(angCorr(lm[11],lm[13],lm[15],cosC));
+  });
+  if(!R.length&&!L.length)return null;
+  const ar=R.length?mn(R):null,al=L.length?mn(L):null,avg=(ar!==null&&al!==null)?(ar+al)/2:(ar??al),diff=ar!==null&&al!==null?Math.abs(ar-al):0;
+  const score=cl(100-Math.abs(avg-90)*1.5-diff*0.5,0,100);
+  return{ar,al,avg,diff,score};
+}
 function calcSym(h){const D=[];h.forEach(({lm})=>{const checks=[];if(ok(lm,12)&&ok(lm,24)&&ok(lm,26)&&ok(lm,11)&&ok(lm,23)&&ok(lm,25))checks.push(Math.abs(ang(lm[12],lm[24],lm[26])-ang(lm[11],lm[23],lm[25])));if(ok(lm,24)&&ok(lm,26)&&ok(lm,28)&&ok(lm,23)&&ok(lm,25)&&ok(lm,27))checks.push(Math.abs(ang(lm[24],lm[26],lm[28])-ang(lm[23],lm[25],lm[27])));if(checks.length)D.push(mn(checks));});if(!D.length)return null;const avg=mn(D),score=cl(100-avg*2,0,100);return{avg,score};}
 function calcVert(h){const Y=[],Hh=[];h.forEach(({lm})=>{if(ok(lm,23)&&ok(lm,24))Y.push((lm[23].y+lm[24].y)/2);if(ok(lm,0)&&ok(lm,27)&&ok(lm,28))Hh.push(Math.abs((lm[27].y+lm[28].y)/2-lm[0].y));});if(Y.length<8)return null;const dev=sd(Y),avgH=Hh.length?mn(Hh):1,pct=(dev/avgH)*100;const score=pct<=2?100:pct<=4?100-(pct-2)*15:cl(70-(pct-4)*12,0,100);return{pct,score};}
 function calcCad(h){if(h.length<24)return null;const vals=[],times=[];h.forEach(({t,lm})=>{if(ok(lm,23)&&ok(lm,25)){vals.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));times.push(t);}});if(vals.length<16)return null;const m=mn(vals);let cross=0;for(let i=1;i<vals.length;i++)if((vals[i-1]-m)*(vals[i]-m)<0)cross++;const span=(times[times.length-1]-times[0])/1000;if(span<1)return null;const spm=Math.round((cross/2/span)*60);if(spm<60||spm>240)return null;const score=spm>=170&&spm<=190?100:spm>=160&&spm<170?60+(spm-160)*4:spm>190&&spm<=200?100-(spm-190)*4:cl(100-Math.abs(spm-180)*1.2,0,100);return{spm,score};}
