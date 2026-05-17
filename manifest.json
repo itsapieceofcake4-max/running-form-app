@@ -1,7 +1,7 @@
 {
-  "name": "ランニングフォーム解析",
-  "short_name": "フォーム解析",
-  "description": "スマホ動画でランニングフォームをリアルタイム解析",
+  "name": "RUNFORM",
+  "short_name": "RUNFORM",
+  "description": "あなたの走りを、データで磨く。AI powered running form analysis.",
   "start_url": "./motion_capture_app.html",
   "scope": "./",
   "display": "standalone",

@@ -9,18 +9,20 @@
 <meta name="theme-color" content="#0d0d1f">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
-<title>ランニングフォーム解析</title>
+<title>RUNFORM</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;background:#0d0d1f;color:#e0e0ff;min-height:100vh}
 
-header{position:relative;text-align:center;padding:22px 16px 18px;background:linear-gradient(160deg,#0a0a24 0%,#12122e 50%,#0a0a1a 100%);border-bottom:1px solid #1e1e4a;overflow:hidden}
-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,#00e5ff0d,transparent);pointer-events:none}
-header::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,#00e5ff33,#ff408122,transparent)}
-.header-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
-.header-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;border:1px solid #00e5ff22;background:#00e5ff0a;font-size:.65rem;color:#00e5ff88;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
-header h1{font-size:clamp(1.3rem,4.5vw,1.9rem);font-weight:700;background:linear-gradient(100deg,#00e5ff 0%,#a78bfa 50%,#ff4081 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.01em;line-height:1.2}
-.header-tagline{font-size:clamp(.72rem,2.2vw,.82rem);color:#5060a0;letter-spacing:.04em}
+@keyframes shimmer{0%{background-position:0% center}100%{background-position:200% center}}
+header{position:relative;text-align:center;padding:24px 16px 20px;background:linear-gradient(160deg,#07071a 0%,#0e0e28 60%,#07071a 100%);border-bottom:1px solid #1a1a40;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 50% -20%,#00e5ff0f,transparent);pointer-events:none}
+header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,#00e5ff44 30%,#a78bfa44 50%,#ff408133 70%,transparent 100%)}
+.header-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px}
+.header-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:20px;border:1px solid #00e5ff28;background:#00e5ff08;font-size:.6rem;color:#00e5ffaa;letter-spacing:.12em;text-transform:uppercase}
+header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.4rem,8vw,3.8rem);font-weight:400;letter-spacing:.12em;line-height:1;background:linear-gradient(100deg,#00e5ff 0%,#a78bfa 45%,#ff4081 80%,#00e5ff 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 5s linear infinite}
+.header-tagline{font-size:clamp(.7rem,2vw,.78rem);color:#4a5080;letter-spacing:.1em}
 
 .wrap{display:flex;flex-direction:column;gap:10px;padding:10px;max-width:1400px;margin:0 auto}
 
@@ -294,8 +296,8 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 <body>
 <header>
   <div class="header-inner">
-    <div class="header-badge">AI Pose Analysis</div>
-    <h1>ランニングフォーム解析</h1>
+    <div class="header-badge">AI Powered</div>
+    <h1>RUNFORM</h1>
     <p class="header-tagline">あなたの走りを、データで磨く。</p>
   </div>
 </header>
