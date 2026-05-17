@@ -604,11 +604,12 @@ const HORIZ_PRESETS=[
   {deg:60, lbl:'正面\n寄り'},
 ];
 const VERT_PRESETS=[
-  {bias:0, lbl:'アイレベル\n腰の高さ'},
-  {bias:4, lbl:'低め\n膝の高さ'},
-  {bias:9, lbl:'アオリ\n地面近く'},
+  {bias:-4, lbl:'高め\n胸〜肩'},
+  {bias:0,  lbl:'アイレベル\n腰の高さ'},
+  {bias:4,  lbl:'低め\n膝の高さ'},
+  {bias:9,  lbl:'アオリ\n地面近く'},
 ];
-let cvpH=0,cvpV=0;
+let cvpH=0,cvpV=1; // default: アイレベル
 
 // Top-view SVG (horizontal angle): runner faces right, camera position below/left
 function horizSVG(deg,sel){
@@ -641,7 +642,8 @@ function vertSVG(bias,sel){
   const dlen=Math.sqrt((px-cx)**2+(pWaist-cy)**2);
   const lx=cx+(px-cx)/dlen*7, ly=cy+(pWaist-cy)/dlen*7;
   const cc=sel?'#00e5ff':'#00788a';
-  const heightLine=bias>0?`<line x1="${cx}" y1="${pWaist}" x2="${cx}" y2="${(cy-5).toFixed(1)}" stroke="#ffd54f44" stroke-width="1" stroke-dasharray="2,2"/>`:'' ;
+  const hl_y1=Math.min(pWaist,cy+1),hl_y2=Math.max(pWaist,cy-1);
+  const heightLine=bias!==0?`<line x1="${cx}" y1="${hl_y1}" x2="${cx}" y2="${hl_y2}" stroke="${bias<0?'#00e5ff':'#ffd54f'}55" stroke-width="1.2" stroke-dasharray="2,2"/>`:'';
   return `<svg viewBox="0 0 88 76" xmlns="http://www.w3.org/2000/svg">
   <line x1="6" y1="${pFoot+2}" x2="82" y2="${pFoot+2}" stroke="#1e1e38" stroke-width="1.2"/>
   <ellipse cx="${px}" cy="${pHead+6}" rx="7" ry="8" fill="#1a1a44" stroke="#4a4a9a" stroke-width="1.5"/>
@@ -679,8 +681,8 @@ function buildVisualPicker(){
   });
   VERT_PRESETS.forEach((p,i)=>{
     const btn=document.createElement('button');
-    btn.className='cvp-card'+(i===0?' sel':'');
-    btn.innerHTML=vertSVG(p.bias,i===0)+`<div class="cvp-lbl">${p.lbl}</div>`;
+    btn.className='cvp-card'+(i===cvpV?' sel':'');
+    btn.innerHTML=vertSVG(p.bias,i===cvpV)+`<div class="cvp-lbl">${p.lbl}</div>`;
     btn.onclick=()=>{
       cvpV=i;
       rebuildVertCards(i);
