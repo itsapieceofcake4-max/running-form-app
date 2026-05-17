@@ -161,6 +161,11 @@ input:checked+.sws:before{transform:translateX(15px)}
 .mb{height:4px;background:#1e1e40;border-radius:4px;overflow:hidden}
 .mbf{height:100%;border-radius:4px;transition:width .6s ease}
 .mc-lbl{font-size:.66rem;color:#6080a0}
+.mc-advice{margin-top:5px;padding:6px 8px;border-radius:7px;font-size:.7rem;line-height:1.45;display:flex;align-items:flex-start;gap:5px}
+.mc-advice.good{background:#00e5ff08;color:#00e5ffbb;border:1px solid #00e5ff18}
+.mc-advice.warn{background:#ffd54f08;color:#ffd54fbb;border:1px solid #ffd54f18}
+.mc-advice.bad{background:#ff408108;color:#ff4081bb;border:1px solid #ff408118}
+.mc-advice-icon{flex-shrink:0;margin-top:.5px}
 .sg{color:#00e5ff}.so{color:#ffd54f}.sb2{color:#ff4081}
 
 .advsec{padding:11px 13px}
@@ -1705,6 +1710,57 @@ function metricSVG(key,m){
   return '';
 }
 
+// ── Per-card advice ────────────────────────────────────────
+function getCardAdvice(key,m){
+  const g=getRunType(),rt=g?g.def:RUN_TYPES.middle;
+  if(key==='trunk'&&m.trunk){
+    const{abs,dev}=m.trunk,[lo,hi]=rt.trunk.ideal;
+    if(abs>=lo&&abs<=hi)return{t:'good',text:`理想的な前傾（${abs.toFixed(1)}°）。この角度を維持しましょう`};
+    if(abs<lo)return{t:abs<lo-5?'bad':'warn',text:rt.trunk.low+`（現在${abs.toFixed(1)}°→目標${lo}〜${hi}°）`};
+    return{t:'warn',text:rt.trunk.high+`（現在${abs.toFixed(1)}°→目標${lo}〜${hi}°）`};
+  }
+  if(key==='knee'&&m.knee){
+    const{peak,mr,ml}=m.knee,minK=rt.knee.min;
+    if(peak>=minK){
+      if(mr>0&&ml>0&&Math.abs(mr-ml)>15)return{t:'warn',text:`引き上げは十分ですが左右差あり（右${mr.toFixed(0)}°/左${ml.toFixed(0)}°）`};
+      return{t:'good',text:`十分な引き上げ（最大${peak.toFixed(0)}°）。推進力が出ています`};
+    }
+    return{t:peak<minK-15?'bad':'warn',text:rt.knee.low+`（現在${peak.toFixed(0)}°→目標${minK}°+）`};
+  }
+  if(key==='arm'&&m.arm){
+    const{avg,diff}=m.arm,ia=rt.arm.ideal;
+    if(diff>15)return{t:'warn',text:`左右の腕振りに差（${diff.toFixed(0)}°）。骨盤の傾きに注意`};
+    if(Math.abs(avg-ia)<=12)return{t:'good',text:`良好な腕振り（${avg.toFixed(0)}°）。${rt.arm.msg}`};
+    if(avg>ia+12)return{t:'warn',text:`肘が伸びすぎ（${avg.toFixed(0)}°→目標${ia}°）。${rt.arm.msg}`};
+    return{t:'warn',text:`肘をもう少し伸ばして（${avg.toFixed(0)}°→目標${ia}°）。${rt.arm.msg}`};
+  }
+  if(key==='overstride'&&m.overstride){
+    const{pct}=m.overstride;
+    if(pct<=15)return{t:'good',text:`重心直下で着地できています（${pct.toFixed(0)}%前方）`};
+    if(pct<=35)return{t:'warn',text:`やや前着地（${pct.toFixed(0)}%前方）。歩幅を縮めて重心下に着地を`};
+    return{t:'bad',text:`前すぎる着地（${pct.toFixed(0)}%前方）。ケイデンスを上げて歩幅を縮めましょう`};
+  }
+  if(key==='landingKnee'&&m.landingKnee){
+    const{flex}=m.landingKnee;
+    if(flex>=15&&flex<=35)return{t:'good',text:`理想的な膝屈曲（${flex.toFixed(0)}°）。衝撃をしっかり吸収できています`};
+    if(flex<15)return{t:flex<8?'bad':'warn',text:`膝が伸びすぎ（${flex.toFixed(0)}°）。ミッドフット着地を意識して膝を曲げて`};
+    return{t:'warn',text:`膝の曲げすぎ（${flex.toFixed(0)}°）。重心が下がりエネルギーロスに`};
+  }
+  if(key==='vert'&&m.vert){
+    const{pct}=m.vert,lim=rt.vert.limit;
+    if(pct<=lim)return{t:'good',text:`上下動が少なく効率的（${pct.toFixed(1)}%）。前に進む力になっています`};
+    if(pct>lim*2)return{t:'bad',text:`上下動が大きすぎ（${pct.toFixed(1)}%）。${rt.vert.msg}`};
+    return{t:'warn',text:`上下動をもう少し抑えて（${pct.toFixed(1)}%→目標${lim}%以下）。${rt.vert.msg}`};
+  }
+  if(key==='cad'&&m.cad){
+    const{spm}=m.cad,ideal=rt.cad.ideal;
+    if(Math.abs(spm-ideal)<=10)return{t:'good',text:`理想的なピッチ（${spm} spm）。このリズムを維持して`};
+    if(spm<ideal-10)return{t:spm<ideal-25?'bad':'warn',text:rt.cad.low+`（${spm}→目標${ideal} spm）。メトロノームで練習を`};
+    return{t:'warn',text:`ピッチがやや高め（${spm} spm）。力を抜いてリラックスして走りましょう`};
+  }
+  return null;
+}
+
 // ── Render results ─────────────────────────────────────────
 function renderCards(m){
   const cards=[
@@ -1719,21 +1775,26 @@ function renderCards(m){
   document.getElementById('metric-grid').innerHTML=cards.map(c=>{
     const sc=c.sc??0,clr=c.sc!==null?col(sc):'#404060';
     const diag=metricSVG(c.key,m);
-    return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-desc">${c.desc}</div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div>${diag}<div class="mc-lbl">${c.lbl}</div></div>`;
+    const adv=getCardAdvice(c.key,m);
+    const advHtml=adv?`<div class="mc-advice ${adv.t}"><span class="mc-advice-icon">${adv.t==='good'?'✅':adv.t==='warn'?'⚠️':'❌'}</span><span>${adv.text}</span></div>`:'';
+    return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-desc">${c.desc}</div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div>${diag}<div class="mc-lbl">${c.lbl}</div>${advHtml}</div>`;
   }).join('');
 }
 function renderAdvice(m){
   const items=[],I={good:'✅',warn:'⚠️',bad:'❌'};
   const g=getRunType(),rt=g?g.def:RUN_TYPES.middle,tn=g?`【${rt.label}向け】`:'';
-  if(m.trunk){const{abs,score,dev}=m.trunk,[lo,hi]=rt.trunk.ideal;if(abs>=lo&&abs<=hi)items.push({t:'good',text:`${tn}体幹の前傾角度は理想的です（${abs.toFixed(1)}°、目標${lo}〜${hi}°）。`});else if(abs<lo)items.push({t:abs<lo-5?'bad':'warn',text:`${tn}${rt.trunk.low}（現在${abs.toFixed(1)}°、目標${lo}〜${hi}°）`});else items.push({t:'warn',text:`${tn}${rt.trunk.high}（現在${abs.toFixed(1)}°、目標${lo}〜${hi}°）`});if(dev>8)items.push({t:'warn',text:`体幹の角度がブレています（ばらつき${dev.toFixed(1)}°）。腹筋・背筋を意識して上半身を安定させましょう。`});}
-  if(m.knee){const{peak,mr,ml}=m.knee,minK=rt.knee.min;if(peak>=minK)items.push({t:'good',text:`${tn}膝の引き上げは十分です（最大${peak.toFixed(0)}°）。`});else items.push({t:peak<minK-15?'bad':'warn',text:`${tn}${rt.knee.low}（現在${peak.toFixed(0)}°）`});if(mr>0&&ml>0&&Math.abs(mr-ml)>15)items.push({t:'warn',text:`左右の膝引き上げに差があります（右${mr.toFixed(0)}° / 左${ml.toFixed(0)}°）。`});}
-  if(m.arm){const{avg,diff}=m.arm,ia=rt.arm.ideal;if(Math.abs(avg-ia)<=12)items.push({t:'good',text:`${tn}腕の振り方は良好です（肘角度${avg.toFixed(0)}°）。${rt.arm.msg}`});else if(avg>ia+12)items.push({t:'warn',text:`${tn}肘が伸びすぎています（${avg.toFixed(0)}°、目標${ia}°前後）。${rt.arm.msg}`});else items.push({t:'warn',text:`${tn}肘を少し伸ばしましょう（${avg.toFixed(0)}°、目標${ia}°前後）。${rt.arm.msg}`});if(diff>15)items.push({t:'warn',text:`左右の腕振りに差があります（差${diff.toFixed(0)}°）。骨盤の傾きや腰痛の原因になります。`});}
-  if(m.vert){const{pct}=m.vert,lim=rt.vert.limit;if(pct<=lim)items.push({t:'good',text:`${tn}上下動が少なく効率的です（${pct.toFixed(1)}%、目標${lim}%以下）。`});else if(pct>lim*2)items.push({t:'bad',text:`${tn}上下動が大きすぎます（${pct.toFixed(1)}%）。${rt.vert.msg}`});else items.push({t:'warn',text:`${tn}上下動をもう少し抑えましょう（${pct.toFixed(1)}%、目標${lim}%以下）。${rt.vert.msg}`});}
-  if(m.overstride){const{pct}=m.overstride;if(pct<=15)items.push({t:'good',text:`着地位置が理想的です（重心の${pct.toFixed(0)}%前方）。膝・股関節への衝撃が少ない効率的な着地です。`});else if(pct<=35)items.push({t:'warn',text:`やや前着地気味です（重心の${pct.toFixed(0)}%前方）。歩幅を少し縮め、足を重心直下に落とすイメージで走りましょう。`});else items.push({t:'bad',text:`オーバーストライドです（重心の${pct.toFixed(0)}%前方）。ブレーキがかかり膝への衝撃が大きい状態です。ケイデンスを上げて歩幅を縮めましょう。`});}
-  if(m.landingKnee){const{flex}=m.landingKnee;if(flex>=15&&flex<=35)items.push({t:'good',text:`着地時の膝屈曲が理想的です（${flex.toFixed(0)}°）。衝撃をしっかり吸収できています。`});else if(flex<15)items.push({t:flex<8?'bad':'warn',text:`着地時に膝が伸びすぎています（屈曲${flex.toFixed(0)}°）。かかと着地になっている可能性があります。ミッドフット着地を意識し、着地の瞬間に膝を曲げて衝撃を吸収しましょう。`});else items.push({t:'warn',text:`着地時の膝の曲がりがやや大きいです（屈曲${flex.toFixed(0)}°）。重心が下がりエネルギーロスにつながります。`});}
-  if(m.cad){const{spm}=m.cad,ideal=rt.cad.ideal;if(Math.abs(spm-ideal)<=10)items.push({t:'good',text:`${tn}ケイデンスは理想的です（${spm} spm）。`});else if(spm<ideal-10)items.push({t:spm<ideal-25?'bad':'warn',text:`${tn}${rt.cad.low}（現在${spm} spm、目標${ideal} spm前後）。メトロノームアプリでリズムを覚えると効果的です。`});else items.push({t:'warn',text:`${tn}${rt.cad.high||`ケイデンスがやや高めです（${spm} spm）。`}`});}
-  if(g){const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);if(allSc.length){const ov=Math.round(mn(allSc));const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、特に膝引き上げと腕振りのリズムを意識して練習しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを鍛えましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離を走るには省エネフォームの習得が最優先です。`;items.push({t:ov>=80?'good':ov>=60?'warn':'bad',text:`【総合】フォームスコア${ov}%。${pn}`});}}
-  document.getElementById('run-advice').innerHTML=items.length?items.map(i=>`<div class="ai ${i.t==='good'?'':i.t}"><span class="aicon">${I[i.t]}</span><span>${i.text}</span></div>`).join(''):'<div class="advph">フォームが検出できませんでした。カメラの角度や照明を確認してください。</div>';
+  // 体幹の安定性（ばらつき）のみ追加
+  if(m.trunk?.dev>8)items.push({t:'warn',text:`体幹の角度にブレがあります（ばらつき${m.trunk.dev.toFixed(1)}°）。腹筋・背筋を意識して上半身を安定させましょう。`});
+  // 総合ゴールサマリー
+  if(g){
+    const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);
+    if(allSc.length){
+      const ov=Math.round(mn(allSc));
+      const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、スコアの低い項目から優先して改善しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを強化しましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離には省エネフォームが最重要です。上下動と着地位置を特に意識して。`;
+      items.push({t:ov>=80?'good':ov>=60?'warn':'bad',text:`【総合スコア ${ov}%】${pn}`});
+    }
+  }
+  document.getElementById('run-advice').innerHTML=items.length?items.map(i=>`<div class="ai ${i.t==='good'?'':i.t}"><span class="aicon">${I[i.t]}</span><span>${i.text}</span></div>`).join(''):'<div class="advph">目標タイムを設定すると総合アドバイスが表示されます</div>';
 }
 
 // ── Compare mode (real-time) ───────────────────────────────
