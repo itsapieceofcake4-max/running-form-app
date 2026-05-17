@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ランニングフォーム解析</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;background:#0d0d1f;color:#e0e0ff;min-height:100vh}
+
+header{text-align:center;padding:14px 12px;background:linear-gradient(135deg,#1a1a3e,#0d0d1f);border-bottom:1px solid #2a2a5a}
+header h1{font-size:clamp(1.2rem,4vw,1.6rem);background:linear-gradient(90deg,#00e5ff,#ff4081);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px}
+header p{font-size:clamp(.7rem,2.5vw,.8rem);color:#8080b0}
+
+.wrap{display:flex;flex-direction:column;gap:10px;padding:10px;max-width:1400px;margin:0 auto}
+
+/* ── Panels ── */
+.panels-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.panel{background:#12122a;border:1px solid #2a2a5a;border-radius:12px;overflow:hidden}
+.ph{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#1a1a3e;border-bottom:1px solid #2a2a5a}
+.ph h2{font-size:.88rem;font-weight:600}
+.badge{font-size:.65rem;padding:2px 7px;border-radius:20px;background:#00e5ff22;color:#00e5ff;border:1px solid #00e5ff44}
+.badge.p{background:#ff408122;color:#ff4081;border-color:#ff408144}
+
+.inp{padding:8px 12px;border-bottom:1px solid #1e1e40}
+.tabs{display:flex;gap:4px;margin-bottom:7px}
+.tb{flex:1;padding:7px 4px;border-radius:7px;border:1px solid #2a2a5a;background:transparent;color:#8080b0;cursor:pointer;font-size:.73rem;transition:all .2s;text-align:center;min-height:36px}
+.tb.active{background:#00e5ff22;color:#00e5ff;border-color:#00e5ff55}
+.tp{display:none}.tp.active{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ui{flex:1;min-width:0;padding:7px 9px;background:#0a0a1f;border:1px solid #2a2a5a;border-radius:7px;color:#e0e0ff;font-size:.8rem;outline:none}
+.ui:focus{border-color:#00e5ff55}
+
+.btn{padding:8px 13px;border-radius:8px;border:none;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .2s;white-space:nowrap;min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn-p{background:linear-gradient(135deg,#00b8d4,#0091ea);color:#fff}
+.btn-r{background:linear-gradient(135deg,#f44336,#c62828);color:#fff}
+.btn-g{background:linear-gradient(135deg,#4caf50,#2e7d32);color:#fff}
+.btn-y{background:linear-gradient(135deg,#ff9800,#e65100);color:#fff}
+.fl{display:flex;align-items:center;gap:7px;padding:9px 12px;background:#1a1a3e;border:1px dashed #2a2a5a;border-radius:8px;cursor:pointer;font-size:.8rem;color:#8080b0;transition:all .2s;width:100%;justify-content:center;min-height:40px}
+.fl:active{border-color:#00e5ff44;color:#00e5ff}
+input[type="file"]{display:none}
+
+/* Camera tab */
+.cam-wrap{display:flex;flex-direction:column;gap:6px;width:100%}
+.cam-row{display:flex;gap:6px;align-items:center}
+select.cam-sel{flex:1;padding:7px 8px;background:#0a0a1f;border:1px solid #2a2a5a;border-radius:7px;color:#e0e0ff;font-size:.78rem;outline:none;min-height:36px}
+.cam-rec-row{display:none;gap:6px;align-items:center}
+.cam-rec-row.show{display:flex}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:#ff4081;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.rec-timer{font-size:.82rem;color:#ff4081;font-weight:700;font-family:monospace;min-width:40px}
+
+/* Video wrapper */
+.vw{position:relative;width:100%;background:#08080f;overflow:hidden;aspect-ratio:9/16;max-height:440px}
+.vw video,.vw canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
+.vwph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#3a3a6a}
+.vwph .ic{font-size:2.2rem}.vwph .tx{font-size:.76rem;text-align:center;padding:0 10px;line-height:1.4}
+.tke{position:absolute;inset:0;display:none;overflow:hidden}
+.tke iframe{width:100%;height:100%;border:none}
+.tknote{font-size:.66rem;color:#6060a0;padding:3px 11px;text-align:center;background:#0a0a1f;border-top:1px solid #1e1e40;line-height:1.4}
+.statusb{padding:5px 11px;font-size:.7rem;color:#6080a0;border-top:1px solid #1a1a3a;min-height:24px}
+.statusb.ready{color:#00e5ff}.statusb.error{color:#ff4081}.statusb.rec{color:#ff4081}
+
+/* ── Controls ── */
+.ctrl{background:#12122a;border:1px solid #2a2a5a;border-radius:12px;padding:10px 13px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ctrl-lbl{font-size:.8rem;color:#8080b0}
+.bc{padding:8px 14px;border-radius:8px;border:1px solid #2a2a5a;background:#1a1a3e;color:#e0e0ff;cursor:pointer;font-size:.8rem;transition:all .2s;min-height:40px}
+.bc:active{opacity:.8}
+.bc.on{background:#00e5ff22;border-color:#00e5ff55;color:#00e5ff}
+.toggles{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
+.tgi{display:flex;align-items:center;gap:5px;font-size:.76rem;color:#8080b0}
+.sw{position:relative;width:34px;height:19px;cursor:pointer;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sws{position:absolute;inset:0;background:#2a2a5a;border-radius:19px;transition:.3s}
+.sws:before{content:'';position:absolute;height:13px;width:13px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.sws{background:#00b8d4}
+input:checked+.sws:before{transform:translateX(15px)}
+
+/* ── Goal ── */
+.goal-bar{background:#12122a;border:1px solid #2a2a5a;border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:9px}
+.goal-bar h3{font-size:.86rem;color:#c0c0e0}
+.goal-inputs{display:flex;gap:11px;flex-wrap:wrap}
+.gf{display:flex;align-items:center;gap:5px;font-size:.78rem;color:#8080b0}
+.gf label{font-size:.73rem;white-space:nowrap}
+.gnum{width:58px;padding:6px 5px;background:#0a0a1f;border:1px solid #2a2a5a;border-radius:7px;color:#e0e0ff;font-size:.86rem;outline:none;text-align:center;min-height:34px}
+.gnum:focus{border-color:#00e5ff55}
+.goal-result{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:7px 10px;background:#0a0a1f;border-radius:8px}
+.gr-item{display:flex;flex-direction:column;gap:1px}
+.gr-label{font-size:.63rem;color:#6080a0}
+.gr-val{font-size:.86rem;font-weight:700;color:#00e5ff}
+.rtbadge{padding:3px 9px;border-radius:20px;font-size:.73rem;font-weight:700;border:1px solid}
+.rt-sprint{background:#ff408122;color:#ff4081;border-color:#ff408155}
+.rt-middle{background:#ffd54f22;color:#ffd54f;border-color:#ffd54f55}
+.rt-long{background:#00e5ff22;color:#00e5ff;border-color:#00e5ff55}
+.goal-hint{font-size:.72rem;color:#6080a0;line-height:1.55;padding:6px 10px;background:#0a0a20;border-radius:7px;border-left:3px solid #2a2a5a}
+
+/* ── Analysis section ── */
+.asec{background:#12122a;border:1px solid #2a2a5a;border-radius:12px;overflow:hidden}
+.mtabs{display:flex;border-bottom:1px solid #2a2a5a}
+.mt{flex:1;padding:10px 6px;text-align:center;cursor:pointer;font-size:.8rem;color:#8080b0;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;min-height:42px}
+.mt.active{color:#00e5ff;border-bottom-color:#00e5ff}
+
+/* Running mode */
+.rpsel{display:flex;gap:6px;padding:9px 12px;border-bottom:1px solid #1e1e40;align-items:center;flex-wrap:wrap}
+.rpsel span{font-size:.76rem;color:#8080b0}
+.rb{padding:5px 12px;border-radius:7px;border:1px solid #2a2a5a;background:transparent;color:#8080b0;cursor:pointer;font-size:.78rem;transition:all .2s;min-height:34px}
+.rb.active{background:#00e5ff22;color:#00e5ff;border-color:#00e5ff55}
+
+/* Analysis state panels */
+.astate{padding:14px 13px}
+.astate-waiting{text-align:center;padding:30px 20px;color:#404070}
+.astate-waiting .big-icon{font-size:3rem;margin-bottom:10px}
+.astate-waiting p{font-size:.82rem;line-height:1.6}
+
+.astate-collecting{padding:16px 13px;display:flex;flex-direction:column;gap:12px}
+.collect-header{display:flex;align-items:center;gap:10px}
+.collect-spinner{width:20px;height:20px;border:3px solid #1a1a3e;border-top-color:#00e5ff;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.collect-title{font-size:.9rem;color:#00e5ff;font-weight:600}
+.collect-sub{font-size:.76rem;color:#8080b0}
+.collect-progress-wrap{display:flex;flex-direction:column;gap:5px}
+.collect-progress-bar{height:6px;background:#1e1e40;border-radius:6px;overflow:hidden}
+.collect-progress-fill{height:100%;background:linear-gradient(90deg,#00b8d4,#00e5ff);border-radius:6px;transition:width .3s ease}
+.collect-stats{display:flex;gap:16px;font-size:.76rem;color:#6080a0}
+.collect-stat span{color:#00e5ff;font-weight:700}
+.stop-btn-wrap{display:flex;gap:8px;flex-wrap:wrap}
+
+.astate-done{display:flex;flex-direction:column;gap:0}
+.done-header{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:#0a1a0a;border-bottom:1px solid #1e401e}
+.done-header-left{display:flex;align-items:center;gap:8px}
+.done-check{font-size:1.1rem}
+.done-title{font-size:.88rem;color:#4caf50;font-weight:600}
+.done-frames{font-size:.74rem;color:#6080a0}
+.done-retry{padding:5px 12px;border-radius:7px;border:1px solid #2a2a5a;background:transparent;color:#8080b0;cursor:pointer;font-size:.76rem}
+
+.radar-layout{display:grid;grid-template-columns:240px 1fr;gap:12px;padding:12px 13px;border-bottom:1px solid #1e1e40}
+.radar-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.radar-wrap h4{font-size:.74rem;color:#8080b0}
+#radar-canvas{width:100%;max-width:230px;height:auto;display:block}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-content:start}
+.mc{background:#0a0a1f;border:1px solid #1e1e40;border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:4px}
+.mc-top{display:flex;justify-content:space-between;align-items:center}
+.mc-name{font-size:.69rem;color:#8080b0}
+.mc-sc{font-size:.74rem;font-weight:700}
+.mc-val{font-size:1.1rem;font-weight:700}
+.mc-unit{font-size:.64rem;color:#6080a0;margin-left:2px}
+.mb{height:4px;background:#1e1e40;border-radius:4px;overflow:hidden}
+.mbf{height:100%;border-radius:4px;transition:width .6s ease}
+.mc-lbl{font-size:.66rem;color:#6080a0}
+.sg{color:#00e5ff}.so{color:#ffd54f}.sb2{color:#ff4081}
+
+.advsec{padding:11px 13px}
+.advsec h3{font-size:.84rem;margin-bottom:8px;color:#c0c0e0}
+.advlist{display:flex;flex-direction:column;gap:6px}
+.ai{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:#0a0a1f;border-radius:8px;border-left:3px solid #00e5ff;font-size:.78rem;line-height:1.55}
+.ai.warn{border-left-color:#ffd54f}.ai.bad{border-left-color:#ff4081}
+.aicon{font-size:.9rem;flex-shrink:0;margin-top:1px}
+.advph{color:#404070;font-size:.78rem;text-align:center;padding:12px}
+
+/* Compare mode */
+.cmpwrap{padding:12px 13px}
+.score-main{display:flex;align-items:center;gap:14px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #1e1e40}
+.sc-circle{position:relative;width:76px;height:76px;flex-shrink:0}
+.sc-circle svg{transform:rotate(-90deg)}
+.sct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#00e5ff}
+.sct small{font-size:.58rem;color:#6080a0;font-weight:normal}
+.sc-detail h3{font-size:.86rem;margin-bottom:2px}
+.sc-detail p{font-size:.74rem;color:#8080b0;line-height:1.5}
+.jgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:12px}
+.jc{background:#0a0a1f;border:1px solid #1e1e40;border-radius:7px;padding:7px 10px}
+.jch{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:.74rem}
+
+/* Loading */
+.lov{display:none;position:fixed;inset:0;background:#0d0d1fcc;z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.lov.show{display:flex}
+.sp{width:40px;height:40px;border:4px solid #1a1a3e;border-top-color:#00e5ff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{font-size:.82rem;color:#8080b0;text-align:center;padding:0 20px}
+
+/* Responsive */
+@media(max-width:640px){
+  .panels-row{grid-template-columns:1fr}
+  .radar-layout{grid-template-columns:1fr;justify-items:center}
+  .metric-grid{grid-template-columns:1fr 1fr}
+  #radar-canvas{max-width:190px}
+  .ctrl{gap:5px}
+  .toggles{margin-left:0;width:100%}
+  .goal-inputs{flex-direction:column;gap:7px}
+}
+@media(max-width:380px){.metric-grid{grid-template-columns:1fr}}
+@supports(padding:max(0px)){.wrap{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
+</style>
+</head>
+<body>
+<header>
+  <h1>ランニングフォーム解析</h1>
+  <p>動画・カメラでフォームを分析 ／ TikTok比較対応</p>
+</header>
+
+<div class="wrap">
+
+  <!-- Panels -->
+  <div class="panels-row" id="panels-row">
+
+    <div class="panel">
+      <div class="ph"><h2>動画 A（お手本）</h2><span class="badge">参照</span></div>
+      <div class="inp">
+        <div class="tabs">
+          <button class="tb active" onclick="switchTab('left','tiktok',this)">TikTok</button>
+          <button class="tb" onclick="switchTab('left','file',this)">📁 ファイル</button>
+          <button class="tb" onclick="switchTab('left','camera',this)">📸 カメラ</button>
+        </div>
+        <div class="tp active" id="left-tab-tiktok">
+          <input class="ui" id="left-tiktok-url" placeholder="TikTok URL...">
+          <button class="btn btn-p" onclick="loadTikTok('left')">読込</button>
+        </div>
+        <div class="tp" id="left-tab-file">
+          <label class="fl" for="lfi">📁 動画ファイルを選択（再生で自動分析）</label>
+          <input type="file" id="lfi" accept="video/*" onchange="loadVideoFile('left',this)">
+        </div>
+        <div class="tp" id="left-tab-camera">
+          <div class="cam-wrap">
+            <div class="cam-row">
+              <select class="cam-sel" id="left-cam-facing">
+                <option value="environment">背面カメラ</option>
+                <option value="user">前面カメラ</option>
+              </select>
+              <button class="btn btn-p" id="left-cam-btn" onclick="toggleCameraPreview('left')">▶ 開始</button>
+            </div>
+            <div class="cam-rec-row" id="left-rec-row">
+              <div class="rec-dot" id="left-rec-dot" style="display:none"></div>
+              <span class="rec-timer" id="left-rec-timer">00:00</span>
+              <button class="btn btn-g" id="left-rec-btn" onclick="toggleRecording('left')">⏺ 録画・分析開始</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vw" id="left-vw">
+        <div class="vwph" id="left-ph"><div class="ic">🎬</div><div class="tx">動画を読み込むか<br>カメラを開始してください</div></div>
+        <video id="left-video" loop playsinline></video>
+        <canvas id="left-canvas"></canvas>
+        <div class="tke" id="left-tke"></div>
+      </div>
+      <div class="tknote" id="left-tknote" style="display:none">※ TikTok埋め込みはモーション解析非対応</div>
+      <div class="statusb" id="left-sb">動画を読み込んでください</div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><h2>動画 B（練習）</h2><span class="badge p">自分</span></div>
+      <div class="inp">
+        <div class="tabs">
+          <button class="tb active" onclick="switchTab('right','tiktok',this)">TikTok</button>
+          <button class="tb" onclick="switchTab('right','file',this)">📁 ファイル</button>
+          <button class="tb" onclick="switchTab('right','camera',this)">📸 カメラ</button>
+        </div>
+        <div class="tp active" id="right-tab-tiktok">
+          <input class="ui" id="right-tiktok-url" placeholder="TikTok URL...">
+          <button class="btn btn-p" onclick="loadTikTok('right')">読込</button>
+        </div>
+        <div class="tp" id="right-tab-file">
+          <label class="fl" for="rfi">📁 動画ファイルを選択（再生で自動分析）</label>
+          <input type="file" id="rfi" accept="video/*" onchange="loadVideoFile('right',this)">
+        </div>
+        <div class="tp" id="right-tab-camera">
+          <div class="cam-wrap">
+            <div class="cam-row">
+              <select class="cam-sel" id="right-cam-facing">
+                <option value="environment">背面カメラ</option>
+                <option value="user">前面カメラ</option>
+              </select>
+              <button class="btn btn-p" id="right-cam-btn" onclick="toggleCameraPreview('right')">▶ 開始</button>
+            </div>
+            <div class="cam-rec-row" id="right-rec-row">
+              <div class="rec-dot" id="right-rec-dot" style="display:none"></div>
+              <span class="rec-timer" id="right-rec-timer">00:00</span>
+              <button class="btn btn-g" id="right-rec-btn" onclick="toggleRecording('right')">⏺ 録画・分析開始</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vw" id="right-vw">
+        <div class="vwph" id="right-ph"><div class="ic">🎥</div><div class="tx">動画を読み込むか<br>カメラを開始してください</div></div>
+        <video id="right-video" loop playsinline></video>
+        <canvas id="right-canvas"></canvas>
+        <div class="tke" id="right-tke"></div>
+      </div>
+      <div class="tknote" id="right-tknote" style="display:none">※ TikTok埋め込みはモーション解析非対応</div>
+      <div class="statusb" id="right-sb">動画を読み込んでください</div>
+    </div>
+
+  </div>
+
+  <!-- Controls -->
+  <div class="ctrl">
+    <span class="ctrl-lbl">動画再生</span>
+    <button class="bc" id="btn-play" onclick="syncPlay()">▶ 再生・分析</button>
+    <button class="bc" onclick="pauseAll()">⏸ 一時停止</button>
+    <button class="bc" onclick="resetAll()">⏮ リセット</button>
+    <div class="toggles">
+      <div class="tgi"><label class="sw"><input type="checkbox" checked onchange="S.showSkeleton=this.checked"><span class="sws"></span></label>骨格</div>
+      <div class="tgi"><label class="sw"><input type="checkbox" checked onchange="S.showVideo=this.checked"><span class="sws"></span></label>映像</div>
+    </div>
+  </div>
+
+  <!-- Goal -->
+  <div class="goal-bar">
+    <h3>🎯 目標設定</h3>
+    <div class="goal-inputs">
+      <div class="gf"><label>距離</label><input class="gnum" type="number" id="goal-dist" value="3.5" step="0.1" min="0.1" inputmode="decimal" oninput="updateGoal()"><span>km</span></div>
+      <div class="gf"><label>目標タイム</label><input class="gnum" type="number" id="goal-min" value="15" min="0" inputmode="numeric" oninput="updateGoal()"><span>分</span><input class="gnum" type="number" id="goal-sec" value="0" min="0" max="59" inputmode="numeric" oninput="updateGoal()"><span>秒</span></div>
+    </div>
+    <div class="goal-result">
+      <div class="gr-item"><div class="gr-label">距離</div><div class="gr-val" id="gr-dist">--</div></div>
+      <div class="gr-item"><div class="gr-label">ペース /km</div><div class="gr-val" id="gr-pace">--</div></div>
+      <div class="gr-item"><div class="gr-label">速度</div><div class="gr-val" id="gr-speed">--</div></div>
+      <div class="gr-item"><div class="gr-label">種目</div><div class="rtbadge rt-middle" id="gr-type">--</div></div>
+    </div>
+    <div class="goal-hint" id="goal-hint"></div>
+  </div>
+
+  <!-- Analysis -->
+  <div class="asec">
+    <div class="mtabs">
+      <button class="mt active" id="tab-run" onclick="setMode('running')">🏃 ランニング解析</button>
+      <button class="mt" id="tab-cmp" onclick="setMode('compare')">🔄 動画比較（リアルタイム）</button>
+    </div>
+
+    <div id="mode-running">
+      <div class="rpsel">
+        <span>解析対象：</span>
+        <button class="rb active" id="sel-left"  onclick="setPanel('left')">動画 A</button>
+        <button class="rb"        id="sel-right" onclick="setPanel('right')">動画 B</button>
+      </div>
+
+      <!-- WAITING -->
+      <div id="state-waiting" class="astate">
+        <div class="astate-waiting">
+          <div class="big-icon">🎬</div>
+          <p>動画ファイルを読み込んで<strong>「▶ 再生・分析」</strong>を押すか<br>カメラタブから<strong>「⏺ 録画・分析開始」</strong>を押してください</p>
+        </div>
+      </div>
+
+      <!-- COLLECTING -->
+      <div id="state-collecting" class="astate-collecting" style="display:none">
+        <div class="collect-header">
+          <div class="collect-spinner"></div>
+          <div>
+            <div class="collect-title" id="collect-title">フォームデータを収集中...</div>
+            <div class="collect-sub" id="collect-sub">動画が終わると自動で分析が始まります</div>
+          </div>
+        </div>
+        <div class="collect-progress-wrap">
+          <div class="collect-progress-bar"><div class="collect-progress-fill" id="collect-fill" style="width:0%"></div></div>
+          <div class="collect-stats">
+            <div>収集フレーム: <span id="collect-frames">0</span></div>
+            <div id="collect-time-stat"></div>
+          </div>
+        </div>
+        <div class="stop-btn-wrap">
+          <button class="btn btn-y" onclick="finishAnalysis(S.panel)">📊 今すぐ分析する</button>
+        </div>
+      </div>
+
+      <!-- DONE -->
+      <div id="state-done" style="display:none">
+        <div class="done-header">
+          <div class="done-header-left">
+            <span class="done-check">✅</span>
+            <div>
+              <div class="done-title">分析完了</div>
+              <div class="done-frames" id="done-frames">0フレームを分析</div>
+            </div>
+          </div>
+          <button class="done-retry" onclick="resetAnalysis()">🔄 もう一度</button>
+        </div>
+        <div class="radar-layout">
+          <div class="radar-wrap">
+            <h4>フォーム総合評価</h4>
+            <canvas id="radar-canvas"></canvas>
+          </div>
+          <div class="metric-grid" id="metric-grid"></div>
+        </div>
+        <div class="advsec">
+          <h3>フォーム診断・アドバイス</h3>
+          <div class="advlist" id="run-advice"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compare mode (real-time) -->
+    <div id="mode-compare" style="display:none">
+      <div class="cmpwrap">
+        <div class="score-main">
+          <div class="sc-circle">
+            <svg width="76" height="76" viewBox="0 0 76 76">
+              <circle cx="38" cy="38" r="31" fill="none" stroke="#1e1e40" stroke-width="7"/>
+              <circle cx="38" cy="38" r="31" fill="none" stroke="#00e5ff" stroke-width="7"
+                stroke-dasharray="194.8" stroke-dashoffset="194.8" stroke-linecap="round"
+                id="score-ring" style="transition:stroke-dashoffset .6s ease"/>
+            </svg>
+            <div class="sct"><span id="score-num">--</span><small>類似度</small></div>
+          </div>
+          <div class="sc-detail">
+            <h3 id="score-lbl">解析待機中</h3>
+            <p id="score-desc">両方に動画を読み込み再生してください。</p>
+          </div>
+        </div>
+        <div class="jgrid" id="jgrid"></div>
+        <div class="advsec" style="padding:0">
+          <h3>関節別アドバイス</h3>
+          <div class="advlist" id="cmp-advice"><div class="advph">解析を開始するとアドバイスが表示されます</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="lov" id="loading">
+  <div class="sp"></div>
+  <div class="lt" id="lt">MediaPipe モデルを読み込み中...<br><small style="font-size:.72rem;color:#606080">初回のみ時間がかかります</small></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script>
+const IS_MOBILE=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+const FRAME_MS=IS_MOBILE?150:80;
+const MODEL_COMPLEXITY=IS_MOBILE?0:1;
+const HIST_MAX=3000; // store up to ~4min at 12fps
+
+const POSE_CONN=[[0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[17,19],[12,14],[14,16],[16,18],[16,20],[16,22],[18,20],[11,23],[12,24],[23,24],[23,25],[24,26],[25,27],[26,28],[27,29],[28,30],[29,31],[30,32],[27,31],[28,32]];
+const JDEFS=[{key:'r_elbow',name:'右肘',pts:[12,14,16]},{key:'l_elbow',name:'左肘',pts:[11,13,15]},{key:'r_sh',name:'右肩',pts:[14,12,24]},{key:'l_sh',name:'左肩',pts:[13,11,23]},{key:'r_knee',name:'右膝',pts:[24,26,28]},{key:'l_knee',name:'左膝',pts:[23,25,27]},{key:'r_hip',name:'右股関節',pts:[12,24,26]},{key:'l_hip',name:'左股関節',pts:[11,23,25]}];
+const RADAR_LABELS=['体幹\n前傾','膝\n引き上げ','腕振り','左右\n対称','上下\n安定','ケイデンス'];
+
+const RUN_TYPES={
+  sprint:{label:'短距離系',cls:'rt-sprint',desc:'〜400m スプリント',trunk:{ideal:[10,20],low:'体幹をもっと前傾させてください（短距離は10〜20°が推進力に直結します）',high:'前傾しすぎです'},knee:{min:60,low:'短距離では膝を高く引き上げることが最重要です（目標60°以上）'},arm:{ideal:80,msg:'短距離では肘を約80°に固定し、力強く素早く振ることがスピードアップに繋がります'},cad:{ideal:195,low:'ケイデンスをさらに上げましょう（短距離の目標は190〜200+ spm）',high:''},vert:{limit:2.5,msg:'地面を力強く蹴ることで上下動を抑えつつ推進力を最大化できます'},hint:'短距離（〜400m）では爆発的な加速と最高速度の維持が重要。最初の10〜20mで前傾姿勢を保ち、徐々に上体を起こしていく走り方が基本です。'},
+  middle:{label:'中距離系',cls:'rt-middle',desc:'1〜8km レースペース',trunk:{ideal:[7,15],low:'中距離では7〜15°の前傾が推進力と持続力のバランスを生みます',high:'前傾が強すぎます。腰への負担が増えペースを維持しにくくなります'},knee:{min:45,low:'膝の引き上げが浅いです（目標45°以上）。スピードを出すには脚の回転を大きくすることが重要です'},arm:{ideal:90,msg:'肘を90°に固定し、体の軸に沿って前後にコンパクトに振ることでリズムを作ります'},cad:{ideal:182,low:'ケイデンスを上げましょう（中距離の目標は178〜188 spm）',high:'ケイデンスがやや高め。歩幅を少し広げてバランスを取りましょう'},vert:{limit:3,msg:'地面反力を前進に変換することが速さの鍵。「後ろ下方向」に押し出すイメージで'},hint:'中距離では速度と持久力のバランスが重要。序盤に飛ばしすぎず、後半でも同じフォームを維持できる余裕を残しながら走りましょう。'},
+  long:{label:'長距離系',cls:'rt-long',desc:'8km超 エンデュランス',trunk:{ideal:[4,10],low:'長距離では軽い前傾（4〜10°）が省エネに繋がります',high:'前傾が強すぎます。長距離では腰痛の原因になります'},knee:{min:35,low:'膝の引き上げが浅すぎます。最低35°は維持しましょう'},arm:{ideal:95,msg:'リラックスした腕振りが重要。肘90〜100°を目安に、肩の力を抜いて振りましょう'},cad:{ideal:178,low:'ケイデンスが低いです（長距離の目標は170〜182 spm）',high:'ケイデンスがやや高め。長距離では無理せず自然なリズムを保ちましょう'},vert:{limit:2,msg:'長距離では上下動を最小化することがエネルギー節約の要。地面を蹴らず「乗り込む」イメージで走りましょう'},hint:'長距離ではエネルギー効率と怪我予防が最優先。フォームが崩れやすい後半こそ正しいフォームを意識することが完走と記録短縮の鍵です。'}
+};
+
+// ── State ──────────────────────────────────────────────────
+const S={
+  left:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null},
+  right:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null},
+  playing:false,showSkeleton:true,showVideo:true,
+  animId:null,lastT:0,mode:'running',panel:'left'
+};
+const HIST={left:[],right:[]};
+
+// ── Utils ──────────────────────────────────────────────────
+function ang(a,b,c){const ba={x:a.x-b.x,y:a.y-b.y},bc={x:c.x-b.x,y:c.y-b.y};const d=ba.x*bc.x+ba.y*bc.y,m=Math.sqrt((ba.x**2+ba.y**2))*Math.sqrt((bc.x**2+bc.y**2));return m?Math.acos(Math.max(-1,Math.min(1,d/m)))*180/Math.PI:0;}
+const mn=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const sd=a=>{const m=mn(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length)};
+const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const ok=(lm,i)=>lm[i]&&lm[i].visibility>0.3;
+const col=s=>s>=80?'#00e5ff':s>=60?'#ffd54f':'#ff4081';
+const cls2=s=>s>=80?'sg':s>=60?'so':'sb2';
+
+// ── Radar ──────────────────────────────────────────────────
+function drawRadar(scores){
+  const canvas=document.getElementById('radar-canvas');if(!canvas)return;
+  const N=6,dpr=window.devicePixelRatio||1;
+  const size=Math.min(225,canvas.parentElement.clientWidth-14);
+  canvas.style.width=size+'px';canvas.style.height=size+'px';
+  canvas.width=size*dpr;canvas.height=size*dpr;
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const cx=size/2,cy=size/2,R=size*0.3,LR=R+size*0.19;
+  const step=Math.PI*2/N,start=-Math.PI/2;
+  ctx.clearRect(0,0,size,size);
+  for(let lv=1;lv<=5;lv++){ctx.beginPath();for(let i=0;i<N;i++){const a=start+i*step,r=R*lv/5;i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));}ctx.closePath();ctx.strokeStyle=lv===5?'#3a3a6a':'#222244';ctx.lineWidth=lv===5?1.2:.7;ctx.stroke();}
+  for(let i=0;i<N;i++){ctx.beginPath();ctx.moveTo(cx,cy);const a=start+i*step;ctx.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));ctx.strokeStyle='#2a2a5a';ctx.lineWidth=1;ctx.stroke();}
+  const vals=scores.map(s=>s??0);
+  ctx.beginPath();for(let i=0;i<N;i++){const a=start+i*step,r=R*vals[i]/100;i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));}ctx.closePath();ctx.fillStyle='rgba(0,229,255,.15)';ctx.fill();ctx.strokeStyle='#00e5ff';ctx.lineWidth=2;ctx.stroke();
+  for(let i=0;i<N;i++){const a=start+i*step,r=R*vals[i]/100,x=cx+r*Math.cos(a),y=cy+r*Math.sin(a);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=col(vals[i]);ctx.fill();}
+  const fs=Math.round(size*.051);
+  for(let i=0;i<N;i++){
+    const a=start+i*step,lx=cx+LR*Math.cos(a),ly=cy+LR*Math.sin(a),lines=RADAR_LABELS[i].split('\n');
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`bold ${fs}px sans-serif`;ctx.fillStyle=scores[i]!==null?col(scores[i]):'#404060';
+    ctx.fillText(scores[i]!==null?Math.round(scores[i])+'%':'--',lx,ly+(lines.length>1?fs*1.1:fs*.7));
+    ctx.fillStyle='#c0c0e0';ctx.font=`${Math.round(fs*.88)}px sans-serif`;
+    lines.forEach((ln,li)=>ctx.fillText(ln,lx,ly-(lines.length-1)*fs*.5+li*fs-(fs*.3)));
+  }
+}
+
+// ── Goal ──────────────────────────────────────────────────
+function getRunType(){
+  const dist=parseFloat(document.getElementById('goal-dist').value)||0;
+  const min=parseInt(document.getElementById('goal-min').value)||0;
+  const sec=parseInt(document.getElementById('goal-sec').value)||0;
+  const totalSec=min*60+sec;if(!dist||!totalSec)return null;
+  const paceSecKm=totalSec/dist,speedKmh=dist/(totalSec/3600);
+  let type=dist<=0.8||paceSecKm<180?'sprint':dist<=8&&paceSecKm<390?'middle':'long';
+  const def=RUN_TYPES[type];
+  const paceStr=`${Math.floor(paceSecKm/60)}'${String(Math.round(paceSecKm%60)).padStart(2,'0')}"`;
+  const timeStr=min>0?`${min}分${sec>0?sec+'秒':''}`:sec+'秒';
+  return{dist,totalSec,paceSecKm,paceStr,speedKmh,type,def,timeStr};
+}
+function updateGoal(){
+  const g=getRunType();if(!g)return;
+  document.getElementById('gr-dist').textContent=g.dist+' km';
+  document.getElementById('gr-pace').textContent=g.paceStr;
+  document.getElementById('gr-speed').textContent=g.speedKmh.toFixed(1)+' km/h';
+  const tb=document.getElementById('gr-type');tb.textContent=g.def.label+'（'+g.def.desc+'）';tb.className='rtbadge '+g.def.cls;
+  document.getElementById('goal-hint').textContent=g.def.hint;
+}
+
+// ── Pose ──────────────────────────────────────────────────
+function mkPose(side){
+  const p=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`});
+  p.setOptions({modelComplexity:MODEL_COMPLEXITY,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:.5,minTrackingConfidence:.5});
+  p.onResults(r=>onRes(side,r));return p;
+}
+async function initPoses(){
+  showLoad('MediaPipe Pose モデルを読み込み中...');
+  try{
+    S.left.pose=mkPose('left');S.right.pose=mkPose('right');
+    await S.left.pose.initialize();setSB('left','準備完了 — 動画を読み込んでください','ready');
+    await S.right.pose.initialize();setSB('right','準備完了 — 動画を読み込んでください','ready');
+  }catch{setSB('left','モデルエラー','error');setSB('right','モデルエラー','error');}
+  hideLoad();
+}
+
+function onRes(side,r){
+  const s=S[side];
+  const canvas=document.getElementById(`${side}-canvas`);
+  const ctx=canvas.getContext('2d');
+  const w=canvas.parentElement.clientWidth,h=canvas.parentElement.clientHeight;
+  canvas.width=w;canvas.height=h;ctx.clearRect(0,0,w,h);
+  if(S.showVideo)ctx.drawImage(r.image,0,0,w,h);
+  else{ctx.fillStyle='#08080f';ctx.fillRect(0,0,w,h);}
+  if(r.poseLandmarks){
+    s.landmarks=r.poseLandmarks;
+    // Only collect if analysis is active
+    if(s.isCollecting&&HIST[side].length<HIST_MAX){
+      HIST[side].push({t:performance.now(),lm:r.poseLandmarks});
+    }
+    if(S.showSkeleton){
+      drawConnectors(ctx,r.poseLandmarks,POSE_CONN,{color:side==='left'?'#00e5ff':'#ff4081',lineWidth:IS_MOBILE?2:2.5});
+      drawLandmarks(ctx,r.poseLandmarks,{color:'#fff',fillColor:side==='left'?'#00e5ff':'#ff4081',lineWidth:1,radius:IS_MOBILE?3:4});
+    }
+  }else s.landmarks=null;
+  s.processing=false;
+}
+
+// ── Analysis state UI ──────────────────────────────────────
+function showStateWaiting(){
+  document.getElementById('state-waiting').style.display='';
+  document.getElementById('state-collecting').style.display='none';
+  document.getElementById('state-done').style.display='none';
+}
+function showStateCollecting(isCamera){
+  document.getElementById('state-waiting').style.display='none';
+  document.getElementById('state-collecting').style.display='';
+  document.getElementById('state-done').style.display='none';
+  document.getElementById('collect-sub').textContent=isCamera
+    ?'「録画停止」または「今すぐ分析」を押すと結果が表示されます'
+    :'動画が終わると自動で分析が始まります（「今すぐ分析」でいつでも確認できます）';
+}
+function showStateDone(frameCount){
+  document.getElementById('state-waiting').style.display='none';
+  document.getElementById('state-collecting').style.display='none';
+  document.getElementById('state-done').style.display='';
+  document.getElementById('done-frames').textContent=frameCount+'フレームを分析（'+Math.round(frameCount*FRAME_MS/1000)+'秒分）';
+}
+
+function updateCollectionUI(side){
+  const h=HIST[side];
+  document.getElementById('collect-frames').textContent=h.length;
+  const v=document.getElementById(`${side}-video`);
+  const s=S[side];
+  if(!s.cameraStream&&v.duration>0){
+    const pct=Math.round((v.currentTime/v.duration)*100);
+    document.getElementById('collect-fill').style.width=pct+'%';
+    document.getElementById('collect-title').textContent=`フォームデータを収集中... ${pct}%`;
+    const cur=Math.round(v.currentTime),dur=Math.round(v.duration);
+    document.getElementById('collect-time-stat').textContent=`${fmtTime(cur)} / ${fmtTime(dur)}`;
+  }
+}
+function fmtTime(sec){return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;}
+
+function resetAnalysis(){
+  HIST[S.panel]=[];
+  showStateWaiting();
+}
+
+// ── Video / Camera loading ─────────────────────────────────
+function loadVideoFile(side,inp){
+  const file=inp.files[0];if(!file)return;
+  stopCameraPreview(side);
+  const s=S[side];
+  const video=document.getElementById(`${side}-video`);
+  if(s.url)URL.revokeObjectURL(s.url);
+  s.url=URL.createObjectURL(file);
+  video.srcObject=null;video.src=s.url;video.load();
+  video.addEventListener('loadedmetadata',()=>adaptAspect(side,video),{once:true});
+
+  // When video ends → finish analysis
+  video.addEventListener('ended',()=>{
+    if(s.isCollecting){finishAnalysis(side);}
+  });
+
+  document.getElementById(`${side}-ph`).style.display='none';
+  document.getElementById(`${side}-tke`).style.display='none';
+  document.getElementById(`${side}-canvas`).style.display='block';
+  s.hasVideo=true;s.isTikTok=false;
+  setSB(side,'読み込み完了: '+file.name,'ready');
+  if(S.panel===side)showStateWaiting();
+}
+
+// Camera: preview (live feed, no data collection)
+async function toggleCameraPreview(side){
+  const s=S[side];
+  if(s.cameraStream){stopCameraPreview(side);return;}
+  const facing=document.getElementById(`${side}-cam-facing`).value;
+  setSB(side,'カメラを起動中...','');
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}},audio:false});
+    const video=document.getElementById(`${side}-video`);
+    video.srcObject=stream;s.cameraStream=stream;
+    video.play();
+    video.addEventListener('loadedmetadata',()=>adaptAspect(side,video),{once:true});
+    document.getElementById(`${side}-ph`).style.display='none';
+    document.getElementById(`${side}-canvas`).style.display='block';
+    s.hasVideo=true;
+    document.getElementById(`${side}-cam-btn`).textContent='⏹ カメラ停止';
+    document.getElementById(`${side}-cam-btn`).className='btn btn-r';
+    document.getElementById(`${side}-rec-row`).classList.add('show');
+    setSB(side,'カメラ映像を表示中 — 録画・分析開始を押してください','ready');
+    if(S.panel===side)showStateWaiting();
+    // Start skeleton preview loop
+    S.playing=true;if(!S.animId)S.animId=requestAnimationFrame(loop);
+  }catch(e){setSB(side,'カメラにアクセスできません。ブラウザの設定でカメラを許可してください。','error');}
+}
+
+function stopCameraPreview(side){
+  const s=S[side];
+  if(s.cameraStream){s.cameraStream.getTracks().forEach(t=>t.stop());s.cameraStream=null;}
+  if(s.recTimer){clearInterval(s.recTimer);s.recTimer=null;}
+  s.isCollecting=false;s.isRecording=false;s.hasVideo=false;
+  const btn=document.getElementById(`${side}-cam-btn`);
+  if(btn){btn.textContent='▶ 開始';btn.className='btn btn-p';}
+  document.getElementById(`${side}-rec-row`).classList.remove('show');
+  document.getElementById(`${side}-rec-dot`).style.display='none';
+  document.getElementById(`${side}-rec-btn`).textContent='⏺ 録画・分析開始';
+  document.getElementById(`${side}-rec-btn`).className='btn btn-g';
+  document.getElementById(`${side}-rec-timer`).textContent='00:00';
+}
+
+// Camera recording: collect data
+function toggleRecording(side){
+  const s=S[side];
+  if(!s.isRecording){
+    // Start recording
+    HIST[side]=[];
+    s.isCollecting=true;s.isRecording=true;s.recStart=Date.now();
+    document.getElementById(`${side}-rec-dot`).style.display='block';
+    document.getElementById(`${side}-rec-btn`).textContent='⏹ 録画・分析停止';
+    document.getElementById(`${side}-rec-btn`).className='btn btn-r';
+    setSB(side,'録画・分析中...','rec');
+    // Update timer
+    s.recTimer=setInterval(()=>{
+      const elapsed=Math.floor((Date.now()-s.recStart)/1000);
+      document.getElementById(`${side}-rec-timer`).textContent=fmtTime(elapsed);
+      document.getElementById('collect-frames').textContent=HIST[side].length;
+    },500);
+    if(S.panel===side)showStateCollecting(true);
+    S.playing=true;if(!S.animId)S.animId=requestAnimationFrame(loop);
+  }else{
+    // Stop recording → analyze
+    finishAnalysis(side);
+  }
+}
+
+function parseTTId(url){const m=url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);return m?m[1]:null;}
+function showTke(side,id){
+  const s=S[side];
+  document.getElementById(`${side}-ph`).style.display='none';
+  document.getElementById(`${side}-video`).style.display='none';
+  document.getElementById(`${side}-canvas`).style.display='none';
+  const tke=document.getElementById(`${side}-tke`);tke.style.display='block';
+  tke.innerHTML=`<iframe src="https://www.tiktok.com/embed/v2/${id}" allow="encrypted-media" allowfullscreen></iframe>`;
+  const nt=document.getElementById(`${side}-tknote`);if(nt)nt.style.display='block';
+  s.hasVideo=false;s.isTikTok=true;
+  setSB(side,'TikTok動画を表示中（モーション解析非対応）','');
+}
+async function loadTikTok(side){
+  const url=document.getElementById(`${side}-tiktok-url`).value.trim();if(!url)return;
+  const id=parseTTId(url);if(id){showTke(side,id);return;}
+  setSB(side,'TikTok URLを解析中...','');
+  try{const r=await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`);if(!r.ok)throw 0;const d=await r.json();if(d.embed_product_id){showTke(side,d.embed_product_id);return;}}catch{}
+  alert('TikTok URLを読み込めませんでした。\nブラウザで動画を開き、完全なURLをコピーしてください。\n例: https://www.tiktok.com/@username/video/1234567890');
+  setSB(side,'URL読み込み失敗','error');
+}
+
+function adaptAspect(side,video){
+  const vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return;
+  const wrap=document.getElementById(`${side}-vw`);
+  wrap.style.aspectRatio=`${vw}/${vh}`;
+  wrap.style.maxHeight=vw>vh?'300px':vw<vh?'520px':'400px';
+  const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
+  const anyLand=(lv.videoWidth>lv.videoHeight&&lv.videoWidth>0)||(rv.videoWidth>rv.videoHeight&&rv.videoWidth>0);
+  document.getElementById('panels-row').style.gridTemplateColumns=anyLand?'1fr':'';
+}
+
+// ── Tab / Mode ─────────────────────────────────────────────
+function switchTab(side,tab,btn){
+  ['tiktok','file','camera'].forEach(t=>document.getElementById(`${side}-tab-${t}`)?.classList.toggle('active',t===tab));
+  btn.closest('.tabs').querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+}
+function setMode(m){
+  S.mode=m;
+  document.getElementById('mode-running').style.display=m==='running'?'':'none';
+  document.getElementById('mode-compare').style.display=m==='compare'?'':'none';
+  document.getElementById('tab-run').classList.toggle('active',m==='running');
+  document.getElementById('tab-cmp').classList.toggle('active',m==='compare');
+}
+function setPanel(side){
+  S.panel=side;
+  document.getElementById('sel-left').classList.toggle('active',side==='left');
+  document.getElementById('sel-right').classList.toggle('active',side==='right');
+}
+
+// ── Playback ───────────────────────────────────────────────
+function syncPlay(){
+  if(!S.left.hasVideo&&!S.right.hasVideo){
+    const hasTk=S.left.isTikTok||S.right.isTikTok;
+    alert(hasTk?'TikTok埋め込みは解析・再生操作ができません。\nSnapTikなどでmp4をダウンロードし「ファイル」タブからアップロードしてください。':'動画ファイルを読み込んでください。');return;
+  }
+  // Start collecting
+  ['left','right'].forEach(side=>{
+    if(S[side].hasVideo&&!S[side].cameraStream){
+      HIST[side]=[];S[side].isCollecting=true;
+    }
+  });
+  const activeSide=S.left.hasVideo?'left':S.panel;
+  showStateCollecting(false);
+
+  const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
+  if(S.left.hasVideo&&!S.left.cameraStream)lv.play();
+  if(S.right.hasVideo&&!S.right.cameraStream)rv.play();
+  S.playing=true;document.getElementById('btn-play').classList.add('on');
+  if(!S.animId)S.animId=requestAnimationFrame(loop);
+}
+
+function pauseAll(){
+  const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
+  if(!S.left.cameraStream)lv.pause();
+  if(!S.right.cameraStream)rv.pause();
+  if(!S.left.cameraStream&&!S.right.cameraStream){
+    S.playing=false;document.getElementById('btn-play').classList.remove('on');
+    if(S.animId){cancelAnimationFrame(S.animId);S.animId=null;}
+  }
+}
+function resetAll(){
+  pauseAll();
+  const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
+  if(!S.left.cameraStream){lv.currentTime=0;S.left.isCollecting=false;}
+  if(!S.right.cameraStream){rv.currentTime=0;S.right.isCollecting=false;}
+  HIST.left=[];HIST.right=[];
+  showStateWaiting();
+}
+
+// ── Frame loop ─────────────────────────────────────────────
+function loop(ts){
+  if(!S.playing){S.animId=null;return;}
+  if(ts-S.lastT>=FRAME_MS){
+    S.lastT=ts;
+    sendFrame('left');sendFrame('right');
+    if(S.mode==='running'&&(S.left.isCollecting||S.right.isCollecting)){
+      updateCollectionUI(S.panel);
+    }else if(S.mode==='compare'){
+      updateCmpUI();
+    }
+  }
+  S.animId=requestAnimationFrame(loop);
+}
+function sendFrame(side){
+  const s=S[side],v=document.getElementById(`${side}-video`);
+  const ready=s.cameraStream?v.readyState>=2:v.readyState>=2&&!v.paused;
+  if(s.hasVideo&&!s.processing&&ready){s.processing=true;s.pose.send({image:v}).catch(()=>{s.processing=false;});}
+}
+
+// ── Finish analysis ────────────────────────────────────────
+function finishAnalysis(side){
+  const s=S[side];
+  s.isCollecting=false;
+
+  // Stop camera recording if active
+  if(s.isRecording){
+    s.isRecording=false;
+    if(s.recTimer){clearInterval(s.recTimer);s.recTimer=null;}
+    document.getElementById(`${side}-rec-dot`).style.display='none';
+    document.getElementById(`${side}-rec-btn`).textContent='⏺ 録画・分析開始';
+    document.getElementById(`${side}-rec-btn`).className='btn btn-g';
+  }
+  // Pause video if file-based
+  if(!s.cameraStream){
+    document.getElementById(`${side}-video`).pause();
+    S.playing=false;document.getElementById('btn-play').classList.remove('on');
+  }
+  setSB(side,'分析完了','ready');
+
+  if(S.panel===side){
+    const h=HIST[side];
+    if(h.length<10){
+      showStateWaiting();
+      alert('データが不足しています。もう少し長く再生または録画してください。');
+      return;
+    }
+    const m=doAnalyze(h);
+    if(!m){showStateWaiting();return;}
+    showStateDone(h.length);
+    const scores=[m.trunk?.score??null,m.knee?.score??null,m.arm?.score??null,m.sym?.score??null,m.vert?.score??null,m.cad?.score??null];
+    drawRadar(scores);renderCards(m);renderAdvice(m);
+    document.getElementById('state-done').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+
+// ── Running metrics ────────────────────────────────────────
+function doAnalyze(h){
+  if(h.length<10)return null;
+  return{trunk:calcTrunk(h),knee:calcKnee(h),arm:calcArm(h),sym:calcSym(h),vert:calcVert(h),cad:calcCad(h)};
+}
+function calcTrunk(h){const a=h.map(({lm})=>{if(!ok(lm,11)||!ok(lm,12)||!ok(lm,23)||!ok(lm,24))return null;const sx=(lm[11].x+lm[12].x)/2,hy=(lm[23].y+lm[24].y)/2,hx=(lm[23].x+lm[24].x)/2;return Math.atan2(sx-hx,hy-(lm[11].y+lm[12].y)/2)*180/Math.PI;}).filter(v=>v!==null);if(!a.length)return null;const avg=mn(a),abs=Math.abs(avg),dev=sd(a);const score=abs>=5&&abs<=15?100:abs<5?cl(50+(abs/5)*50,0,100):cl(100-((abs-15)/15)*100,0,100);return{avg,abs,dev,score};}
+function calcKnee(h){const R=[],L=[];h.forEach(({lm})=>{if(ok(lm,24)&&ok(lm,26))R.push(Math.abs(Math.atan2(lm[26].x-lm[24].x,lm[24].y-lm[26].y)*180/Math.PI));if(ok(lm,23)&&ok(lm,25))L.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));});if(!R.length&&!L.length)return null;const mr=R.length?Math.max(...R):0,ml=L.length?Math.max(...L):0,peak=Math.max(mr,ml);const score=peak>=50?100:peak>=35?60+(peak-35)/15*40:cl((peak/35)*60,0,100);return{mr,ml,peak,score};}
+function calcArm(h){const R=[],L=[];h.forEach(({lm})=>{if(ok(lm,12)&&ok(lm,14)&&ok(lm,16))R.push(ang(lm[12],lm[14],lm[16]));if(ok(lm,11)&&ok(lm,13)&&ok(lm,15))L.push(ang(lm[11],lm[13],lm[15]));});if(!R.length&&!L.length)return null;const ar=R.length?mn(R):null,al=L.length?mn(L):null,avg=(ar!==null&&al!==null)?(ar+al)/2:(ar??al),diff=ar!==null&&al!==null?Math.abs(ar-al):0;const score=cl(100-Math.abs(avg-90)*1.5-diff*0.5,0,100);return{ar,al,avg,diff,score};}
+function calcSym(h){const D=[];h.forEach(({lm})=>{const checks=[];if(ok(lm,12)&&ok(lm,24)&&ok(lm,26)&&ok(lm,11)&&ok(lm,23)&&ok(lm,25))checks.push(Math.abs(ang(lm[12],lm[24],lm[26])-ang(lm[11],lm[23],lm[25])));if(ok(lm,24)&&ok(lm,26)&&ok(lm,28)&&ok(lm,23)&&ok(lm,25)&&ok(lm,27))checks.push(Math.abs(ang(lm[24],lm[26],lm[28])-ang(lm[23],lm[25],lm[27])));if(checks.length)D.push(mn(checks));});if(!D.length)return null;const avg=mn(D),score=cl(100-avg*2,0,100);return{avg,score};}
+function calcVert(h){const Y=[],Hh=[];h.forEach(({lm})=>{if(ok(lm,23)&&ok(lm,24))Y.push((lm[23].y+lm[24].y)/2);if(ok(lm,0)&&ok(lm,27)&&ok(lm,28))Hh.push(Math.abs((lm[27].y+lm[28].y)/2-lm[0].y));});if(Y.length<8)return null;const dev=sd(Y),avgH=Hh.length?mn(Hh):1,pct=(dev/avgH)*100;const score=pct<=2?100:pct<=4?100-(pct-2)*15:cl(70-(pct-4)*12,0,100);return{pct,score};}
+function calcCad(h){if(h.length<24)return null;const vals=[],times=[];h.forEach(({t,lm})=>{if(ok(lm,23)&&ok(lm,25)){vals.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));times.push(t);}});if(vals.length<16)return null;const m=mn(vals);let cross=0;for(let i=1;i<vals.length;i++)if((vals[i-1]-m)*(vals[i]-m)<0)cross++;const span=(times[times.length-1]-times[0])/1000;if(span<1)return null;const spm=Math.round((cross/2/span)*60);if(spm<60||spm>240)return null;const score=spm>=170&&spm<=190?100:spm>=160&&spm<170?60+(spm-160)*4:spm>190&&spm<=200?100-(spm-190)*4:cl(100-Math.abs(spm-180)*1.2,0,100);return{spm,score};}
+
+// ── Render results ─────────────────────────────────────────
+function renderCards(m){
+  const cards=[
+    {name:'体幹前傾角',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
+    {name:'膝の引き上げ',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想≥45°',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=50?'十分':m.knee.peak>=35?'やや浅い':'浅い'):'--'},
+    {name:'腕振り角度',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
+    {name:'左右対称性',val:m.sym?`${Math.round(m.sym.score)}%`:'--',unit:'左右の差',sc:m.sym?.score??null,lbl:m.sym?(m.sym.avg<8?'対称':'非対称あり'):'--'},
+    {name:'上下動',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <3%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=2?'安定':m.vert.pct<=4?'やや多い':'多すぎ'):'--'},
+    {name:'ケイデンス',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
+  ];
+  document.getElementById('metric-grid').innerHTML=cards.map(c=>{const sc=c.sc??0,clr=c.sc!==null?col(sc):'#404060';return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div><div class="mc-lbl">${c.lbl}</div></div>`;}).join('');
+}
+function renderAdvice(m){
+  const items=[],I={good:'✅',warn:'⚠️',bad:'❌'};
+  const g=getRunType(),rt=g?g.def:RUN_TYPES.middle,tn=g?`【${rt.label}向け】`:'';
+  if(m.trunk){const{abs,score,dev}=m.trunk,[lo,hi]=rt.trunk.ideal;if(abs>=lo&&abs<=hi)items.push({t:'good',text:`${tn}体幹の前傾角度は理想的です（${abs.toFixed(1)}°、目標${lo}〜${hi}°）。`});else if(abs<lo)items.push({t:abs<lo-5?'bad':'warn',text:`${tn}${rt.trunk.low}（現在${abs.toFixed(1)}°、目標${lo}〜${hi}°）`});else items.push({t:'warn',text:`${tn}${rt.trunk.high}（現在${abs.toFixed(1)}°、目標${lo}〜${hi}°）`});if(dev>8)items.push({t:'warn',text:`体幹の角度がブレています（ばらつき${dev.toFixed(1)}°）。腹筋・背筋を意識して上半身を安定させましょう。`});}
+  if(m.knee){const{peak,mr,ml}=m.knee,minK=rt.knee.min;if(peak>=minK)items.push({t:'good',text:`${tn}膝の引き上げは十分です（最大${peak.toFixed(0)}°）。`});else items.push({t:peak<minK-15?'bad':'warn',text:`${tn}${rt.knee.low}（現在${peak.toFixed(0)}°）`});if(mr>0&&ml>0&&Math.abs(mr-ml)>15)items.push({t:'warn',text:`左右の膝引き上げに差があります（右${mr.toFixed(0)}° / 左${ml.toFixed(0)}°）。`});}
+  if(m.arm){const{avg,diff}=m.arm,ia=rt.arm.ideal;if(Math.abs(avg-ia)<=12)items.push({t:'good',text:`${tn}腕の振り方は良好です（肘角度${avg.toFixed(0)}°）。${rt.arm.msg}`});else if(avg>ia+12)items.push({t:'warn',text:`${tn}肘が伸びすぎています（${avg.toFixed(0)}°、目標${ia}°前後）。${rt.arm.msg}`});else items.push({t:'warn',text:`${tn}肘を少し伸ばしましょう（${avg.toFixed(0)}°、目標${ia}°前後）。${rt.arm.msg}`});if(diff>15)items.push({t:'warn',text:`左右の腕振りに差があります（差${diff.toFixed(0)}°）。骨盤の傾きや腰痛の原因になります。`});}
+  if(m.vert){const{pct}=m.vert,lim=rt.vert.limit;if(pct<=lim)items.push({t:'good',text:`${tn}上下動が少なく効率的です（${pct.toFixed(1)}%、目標${lim}%以下）。`});else if(pct>lim*2)items.push({t:'bad',text:`${tn}上下動が大きすぎます（${pct.toFixed(1)}%）。${rt.vert.msg}`});else items.push({t:'warn',text:`${tn}上下動をもう少し抑えましょう（${pct.toFixed(1)}%、目標${lim}%以下）。${rt.vert.msg}`});}
+  if(m.sym){const{avg,score}=m.sym;if(score>=85)items.push({t:'good',text:'左右の動きが対称でバランスよく走れています。'});else items.push({t:score>=60?'warn':'bad',text:`左右の動きに非対称があります（差${avg.toFixed(1)}°）。ストレッチや片脚トレーニングで改善できます。`});}
+  if(m.cad){const{spm}=m.cad,ideal=rt.cad.ideal;if(Math.abs(spm-ideal)<=10)items.push({t:'good',text:`${tn}ケイデンスは理想的です（${spm} spm）。`});else if(spm<ideal-10)items.push({t:spm<ideal-25?'bad':'warn',text:`${tn}${rt.cad.low}（現在${spm} spm、目標${ideal} spm前後）。メトロノームアプリでリズムを覚えると効果的です。`});else items.push({t:'warn',text:`${tn}${rt.cad.high||`ケイデンスがやや高めです（${spm} spm）。`}`});}
+  if(g){const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.sym?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);if(allSc.length){const ov=Math.round(mn(allSc));const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、特に膝引き上げと腕振りのリズムを意識して練習しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを鍛えましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離を走るには省エネフォームの習得が最優先です。`;items.push({t:ov>=80?'good':ov>=60?'warn':'bad',text:`【総合】フォームスコア${ov}%。${pn}`});}}
+  document.getElementById('run-advice').innerHTML=items.length?items.map(i=>`<div class="ai ${i.t==='good'?'':i.t}"><span class="aicon">${I[i.t]}</span><span>${i.text}</span></div>`).join(''):'<div class="advph">フォームが検出できませんでした。カメラの角度や照明を確認してください。</div>';
+}
+
+// ── Compare mode (real-time) ───────────────────────────────
+function updateCmpUI(){
+  const lm=S.left.landmarks,rm=S.right.landmarks;
+  if(!lm||!rm){setCmpScore(null,{},{});return;}
+  const la=exAng(lm),ra=exAng(rm);
+  const scores={},diffs={};let tot=0,cnt=0;
+  JDEFS.forEach(({key,pts:[ai,bi,ci]})=>{if(la[key]!==undefined&&ra[key]!==undefined){const d=Math.abs(la[key]-ra[key]);diffs[key]={diff:d,la:la[key],ra:ra[key]};scores[key]=cl(100-(d/45)*100,0,100);tot+=scores[key];cnt++;}});
+  setCmpScore(cnt?Math.round(tot/cnt):null,scores,diffs);
+}
+function exAng(lm){const a={};JDEFS.forEach(({key,pts:[ai,bi,ci]})=>{const A=lm[ai],B=lm[bi],C=lm[ci];if(A&&B&&C&&A.visibility>.3&&B.visibility>.3&&C.visibility>.3)a[key]=ang(A,B,C);});return a;}
+function setCmpScore(score,scores,diffs){
+  const nE=document.getElementById('score-num'),ring=document.getElementById('score-ring'),lbl=document.getElementById('score-lbl'),desc=document.getElementById('score-desc');
+  if(score===null){nE.textContent='--';ring.style.strokeDashoffset='194.8';lbl.textContent='ポーズ検出中...';desc.textContent='両方の動画を再生してください。';document.getElementById('jgrid').innerHTML='';document.getElementById('cmp-advice').innerHTML='<div class="advph">解析を開始するとアドバイスが表示されます</div>';return;}
+  nE.textContent=score+'%';ring.style.strokeDashoffset=194.8*(1-score/100);ring.style.stroke=col(score);
+  lbl.textContent=score>=80?'素晴らしい！':score>=60?'もう少し！':'要練習';
+  desc.textContent=score>=80?'お手本とよく一致しています。':score>=60?'一部の関節でズレがあります。':'動きに大きなズレがあります。';
+  document.getElementById('jgrid').innerHTML=JDEFS.map(({key,name})=>{const s=scores[key];if(s===undefined)return '';return `<div class="jc"><div class="jch"><span>${name}</span><span class="${cls2(s)}">${Math.round(s)}%</span></div><div class="mb"><div class="mbf" style="width:${s}%;background:${col(s)}"></div></div></div>`;}).join('');
+  const AM={r_elbow:{up:'右肘をもっと曲げて',down:'右肘をもう少し伸ばして'},l_elbow:{up:'左肘をもっと曲げて',down:'左肘をもう少し伸ばして'},r_sh:{up:'右腕を上げて',down:'右腕を下げて'},l_sh:{up:'左腕を上げて',down:'左腕を下げて'},r_knee:{up:'右膝をもっと曲げて',down:'右膝をもっと伸ばして'},l_knee:{up:'左膝をもっと曲げて',down:'左膝をもっと伸ばして'},r_hip:{up:'右腰をもっと前に出して',down:'右腰を引いて'},l_hip:{up:'左腰をもっと前に出して',down:'左腰を引いて'}};
+  const items=Object.entries(diffs).sort((a,b)=>b[1].diff-a[1].diff).slice(0,5).map(([key,{diff,la,ra}])=>{const def=JDEFS.find(d=>d.key===key),s=cl(100-(diff/45)*100,0,100),t=s>=80?'':s>=60?'warn':'bad',ic=s>=80?'✅':s>=60?'⚠️':'❌',adv=AM[key],dir=ra<la?'up':'down';const txt=s>=85?`${def.name}は良い位置です（差${Math.round(diff)}°）`:adv?`${def.name}: ${adv[dir]}（差${Math.round(diff)}°、お手本${Math.round(la)}° / あなた${Math.round(ra)}°）`:`${def.name}の角度を調整してください（差${Math.round(diff)}°）`;return `<div class="ai ${t}"><span class="aicon">${ic}</span><span>${txt}</span></div>`;}).join('');
+  document.getElementById('cmp-advice').innerHTML=items||'<div class="advph">アドバイスなし</div>';
+}
+
+// ── Helpers ────────────────────────────────────────────────
+function setSB(side,msg,type=''){const el=document.getElementById(`${side}-sb`);el.textContent=msg;el.className='statusb'+(type?' '+type:'');}
+function showLoad(msg){document.getElementById('lt').textContent=msg;document.getElementById('loading').classList.add('show');}
+function hideLoad(){document.getElementById('loading').classList.remove('show');}
+
+// ── Boot ───────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  setTimeout(initPoses,400);
+  updateGoal();
+});
+document.getElementById('left-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('left');});
+document.getElementById('right-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('right');});
+window.addEventListener('resize',()=>{drawRadar([null,null,null,null,null,null]);});
+</script>
+</body>
+</html>
