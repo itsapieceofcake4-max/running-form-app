@@ -118,8 +118,11 @@ input:checked+.sws:before{transform:translateX(15px)}
 .collect-title{font-size:.9rem;color:#00e5ff;font-weight:600}
 .collect-sub{font-size:.76rem;color:#8080b0}
 .collect-progress-wrap{display:flex;flex-direction:column;gap:5px}
-.collect-progress-bar{height:6px;background:#1e1e40;border-radius:6px;overflow:hidden}
-.collect-progress-fill{height:100%;background:linear-gradient(90deg,#00b8d4,#00e5ff);border-radius:6px;transition:width .3s ease}
+.collect-progress-bar{position:relative;height:8px;background:#1e1e40;border-radius:6px;overflow:visible}
+.collect-progress-fill{height:100%;background:linear-gradient(90deg,#ff9800,#ffd54f);border-radius:6px;transition:width .3s ease,background .4s ease}
+.collect-progress-fill.ok{background:linear-gradient(90deg,#00b8d4,#00e5ff)}
+.collect-min-mark{position:absolute;top:-4px;bottom:-4px;width:2.5px;background:#ffd54f;border-radius:2px;pointer-events:none;z-index:2}
+.collect-min-mark::after{content:'最低ライン';position:absolute;bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);font-size:.58rem;color:#ffd54f;white-space:nowrap;background:#0d0d1f;padding:1px 4px;border-radius:3px}
 .collect-stats{display:flex;gap:16px;font-size:.76rem;color:#6080a0}
 .collect-stat span{color:#00e5ff;font-weight:700}
 .stop-btn-wrap{display:flex;gap:8px;flex-wrap:wrap}
@@ -431,14 +434,17 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
           </div>
         </div>
         <div class="collect-progress-wrap">
-          <div class="collect-progress-bar"><div class="collect-progress-fill" id="collect-fill" style="width:0%"></div></div>
+          <div class="collect-progress-bar">
+            <div class="collect-progress-fill" id="collect-fill" style="width:0%"></div>
+            <div class="collect-min-mark" id="collect-min-mark" style="left:30%"></div>
+          </div>
           <div class="collect-stats">
-            <div>収集フレーム: <span id="collect-frames">0</span></div>
+            <div>収集時間: <span id="collect-frames">0.0</span>秒</div>
             <div id="collect-time-stat"></div>
           </div>
         </div>
         <div class="stop-btn-wrap">
-          <button class="btn btn-y" onclick="finishAnalysis(S.panel)">📊 今すぐ分析する</button>
+          <button class="btn btn-y" id="now-analyze-btn" onclick="finishAnalysis(S.panel)" disabled style="opacity:.45">⏳ あと2.0秒...</button>
         </div>
       </div>
 
@@ -509,6 +515,7 @@ const IS_MOBILE=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 const FRAME_MS=IS_MOBILE?150:80;
 const MODEL_COMPLEXITY=IS_MOBILE?0:1;
 const HIST_MAX=3000; // store up to ~4min at 12fps
+const MIN_ANALYSIS_SEC=2; // minimum seconds needed for valid analysis
 
 const POSE_CONN=[[0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],[11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[17,19],[12,14],[14,16],[16,18],[16,20],[16,22],[18,20],[11,23],[12,24],[23,24],[23,25],[24,26],[25,27],[26,28],[27,29],[28,30],[29,31],[30,32],[27,31],[28,32]];
 const JDEFS=[{key:'r_elbow',name:'右肘',pts:[12,14,16]},{key:'l_elbow',name:'左肘',pts:[11,13,15]},{key:'r_sh',name:'右肩',pts:[14,12,24]},{key:'l_sh',name:'左肩',pts:[13,11,23]},{key:'r_knee',name:'右膝',pts:[24,26,28]},{key:'l_knee',name:'左膝',pts:[23,25,27]},{key:'r_hip',name:'右股関節',pts:[12,24,26]},{key:'l_hip',name:'左股関節',pts:[11,23,25]}];
@@ -788,8 +795,13 @@ function showStateCollecting(isCamera){
   document.getElementById('state-collecting').style.display='';
   document.getElementById('state-done').style.display='none';
   document.getElementById('collect-sub').textContent=isCamera
-    ?'「録画停止」または「今すぐ分析」を押すと結果が表示されます'
-    :'動画が終わると自動で分析が始まります（「今すぐ分析」でいつでも確認できます）';
+    ?`最低${MIN_ANALYSIS_SEC}秒録画すると「今すぐ分析」が有効になります`
+    :`最低${MIN_ANALYSIS_SEC}秒を過ぎると「今すぐ分析」が有効になります（動画終了で自動分析）`;
+  // Reset button to disabled state
+  const btn=document.getElementById('now-analyze-btn');
+  if(btn){btn.disabled=true;btn.style.opacity='0.45';btn.textContent=`⏳ あと${MIN_ANALYSIS_SEC.toFixed(1)}秒...`;}
+  const fill=document.getElementById('collect-fill');
+  if(fill){fill.style.width='0%';fill.classList.remove('ok');}
 }
 function showStateDone(frameCount,camAngle=0){
   document.getElementById('state-waiting').style.display='none';
@@ -803,21 +815,50 @@ function showStateDone(frameCount,camAngle=0){
 
 function updateCollectionUI(side){
   const h=HIST[side];
-  document.getElementById('collect-frames').textContent=h.length;
+  const span=h.length>1?(h[h.length-1].t-h[0].t)/1000:0;
+  const hasMin=span>=MIN_ANALYSIS_SEC;
   const v=document.getElementById(`${side}-video`);
   const s=S[side];
+
+  // Update "今すぐ分析" button
+  const btn=document.getElementById('now-analyze-btn');
+  if(btn){
+    btn.disabled=!hasMin;
+    btn.style.opacity=hasMin?'1':'0.45';
+    btn.textContent=hasMin?'📊 今すぐ分析する':`⏳ あと${Math.max(0,MIN_ANALYSIS_SEC-span).toFixed(1)}秒...`;
+    btn.className=hasMin?'btn btn-y':'btn btn-y'; // keep style
+  }
+
+  // Fill color: orange→cyan once min reached
+  const fill=document.getElementById('collect-fill');
+  if(fill)fill.classList.toggle('ok',hasMin);
+
   if(!s.cameraStream&&v.duration>0){
+    // File video mode
     const rS=s.rangeStart||0,rE=s.rangeEnd||v.duration;
-    const rangeDur=rE-rS;
-    const pct=Math.round(Math.max(0,Math.min(100,(v.currentTime-rS)/rangeDur*100)));
-    document.getElementById('collect-fill').style.width=pct+'%';
-    document.getElementById('collect-title').textContent=`フォームデータを収集中... ${pct}%`;
+    const rangeDur=Math.max(0.01,rE-rS);
+    const pct=Math.max(0,Math.min(100,(v.currentTime-rS)/rangeDur*100));
+    if(fill)fill.style.width=pct+'%';
+    document.getElementById('collect-frames').textContent=span.toFixed(1);
+    document.getElementById('collect-title').textContent=`フォームデータを収集中... ${Math.round(pct)}%`;
     document.getElementById('collect-time-stat').textContent=`${fmtTime(Math.round(v.currentTime))} / ${fmtTime(Math.round(rE))}`;
-    // Update playhead on range bar
-    if(s.duration>0){
-      const ph=document.getElementById(`${side}-rs-ph`);
-      if(ph)ph.style.left=(v.currentTime/s.duration*100)+'%';
-    }
+    // Min-mark position relative to range
+    const markPct=Math.min(98,MIN_ANALYSIS_SEC/rangeDur*100);
+    const mark=document.getElementById('collect-min-mark');
+    if(mark)mark.style.left=markPct+'%';
+    // Playhead on range bar
+    if(s.duration>0){const ph=document.getElementById(`${side}-rs-ph`);if(ph)ph.style.left=(v.currentTime/s.duration*100)+'%';}
+  } else {
+    // Camera mode: show elapsed time as progress (max display = 30s)
+    const maxDisp=Math.max(MIN_ANALYSIS_SEC*5,30);
+    const pct=Math.min(100,span/maxDisp*100);
+    if(fill)fill.style.width=pct+'%';
+    document.getElementById('collect-frames').textContent=span.toFixed(1);
+    document.getElementById('collect-title').textContent=hasMin?`録画中... ${span.toFixed(1)}秒 ✓`:`録画中... ${span.toFixed(1)}秒（最低${MIN_ANALYSIS_SEC}秒必要）`;
+    document.getElementById('collect-time-stat').textContent='';
+    const markPct=Math.min(98,MIN_ANALYSIS_SEC/maxDisp*100);
+    const mark=document.getElementById('collect-min-mark');
+    if(mark)mark.style.left=markPct+'%';
   }
 }
 function fmtTime(sec){return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;}
@@ -1107,9 +1148,10 @@ function finishAnalysis(side){
 
   if(S.panel===side){
     const h=HIST[side];
-    if(h.length<10){
+    const span=h.length>1?(h[h.length-1].t-h[0].t)/1000:0;
+    if(span<MIN_ANALYSIS_SEC){
       showStateWaiting();
-      alert('データが不足しています。もう少し長く再生または録画してください。');
+      alert(`データが不足しています。最低${MIN_ANALYSIS_SEC}秒以上の映像が必要です（現在${span.toFixed(1)}秒）。`);
       return;
     }
     const m=doAnalyze(h);
