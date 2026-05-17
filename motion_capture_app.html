@@ -14,9 +14,13 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;background:#0d0d1f;color:#e0e0ff;min-height:100vh}
 
-header{text-align:center;padding:14px 12px;background:linear-gradient(135deg,#1a1a3e,#0d0d1f);border-bottom:1px solid #2a2a5a}
-header h1{font-size:clamp(1.2rem,4vw,1.6rem);background:linear-gradient(90deg,#00e5ff,#ff4081);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px}
-header p{font-size:clamp(.7rem,2.5vw,.8rem);color:#8080b0}
+header{position:relative;text-align:center;padding:22px 16px 18px;background:linear-gradient(160deg,#0a0a24 0%,#12122e 50%,#0a0a1a 100%);border-bottom:1px solid #1e1e4a;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,#00e5ff0d,transparent);pointer-events:none}
+header::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,#00e5ff33,#ff408122,transparent)}
+.header-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
+.header-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;border:1px solid #00e5ff22;background:#00e5ff0a;font-size:.65rem;color:#00e5ff88;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+header h1{font-size:clamp(1.3rem,4.5vw,1.9rem);font-weight:700;background:linear-gradient(100deg,#00e5ff 0%,#a78bfa 50%,#ff4081 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.01em;line-height:1.2}
+.header-tagline{font-size:clamp(.72rem,2.2vw,.82rem);color:#5060a0;letter-spacing:.04em}
 
 .wrap{display:flex;flex-direction:column;gap:10px;padding:10px;max-width:1400px;margin:0 auto}
 
@@ -289,8 +293,11 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 </head>
 <body>
 <header>
-  <h1>ランニングフォーム解析</h1>
-  <p>動画・カメラでフォームを分析 ／ TikTok比較対応</p>
+  <div class="header-inner">
+    <div class="header-badge">AI Pose Analysis</div>
+    <h1>ランニングフォーム解析</h1>
+    <p class="header-tagline">あなたの走りを、データで磨く。</p>
+  </div>
 </header>
 <div class="auth-bar" id="auth-bar">
   <span class="auth-hint" id="auth-hint">ログインすると分析結果を保存できます</span>
