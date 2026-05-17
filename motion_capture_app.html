@@ -184,6 +184,13 @@ input[type="range"]{-webkit-appearance:none;height:4px;border-radius:4px;backgro
 input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#00e5ff;cursor:pointer;border:2px solid #00b8d4;box-shadow:0 0 4px #00e5ff44}
 input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#00e5ff;cursor:pointer;border:2px solid #00b8d4;box-shadow:none}
 
+/* ── Layout Selector ── */
+.layout-sel{display:flex;align-items:center;gap:7px;padding:7px 12px;background:#0d0d20;border:1px solid #1a1a3a;border-radius:10px}
+.layout-sel-lbl{font-size:.72rem;color:#6080a0;white-space:nowrap;flex-shrink:0}
+.layout-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:1px solid #2a2a5a;background:transparent;color:#8080b0;cursor:pointer;font-size:.75rem;transition:all .2s}
+.layout-btn.active{background:#1a1a4a;border-color:#00e5ff;color:#00e5ff;font-weight:600}
+.layout-btn:hover:not(.active){background:#16163a;color:#c0c0e0}
+
 /* ── Camera Visual Picker ── */
 .cam-visual-picker{background:#12122a;border:1px solid #2a2a5a;border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:8px}
 .cvp-head{display:flex;align-items:baseline;gap:8px}
@@ -237,6 +244,14 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 </header>
 
 <div class="wrap">
+
+  <!-- Layout Selector -->
+  <div class="layout-sel">
+    <span class="layout-sel-lbl">レイアウト:</span>
+    <button class="layout-btn active" id="ar-auto" onclick="setLayout('auto')">🔄 自動</button>
+    <button class="layout-btn" id="ar-port" onclick="setLayout('portrait')">📱 縦長</button>
+    <button class="layout-btn" id="ar-land" onclick="setLayout('landscape')">🖥 横長</button>
+  </div>
 
   <!-- Panels -->
   <div class="panels-row" id="panels-row">
@@ -1077,14 +1092,29 @@ async function loadTikTok(side){
   setSB(side,'URL読み込み失敗','error');
 }
 
+let videoLayout='auto';
+function setLayout(mode){
+  videoLayout=mode;
+  ['auto','port','land'].forEach((id,i)=>document.getElementById('ar-'+id)?.classList.toggle('active',['auto','portrait','landscape'][i]===mode));
+  applyVideoLayout();
+}
+function applyVideoLayout(){
+  const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
+  let portrait;
+  if(videoLayout==='portrait'){portrait=true;}
+  else if(videoLayout==='landscape'){portrait=false;}
+  else{
+    const w=lv.videoWidth||rv.videoWidth,h=lv.videoHeight||rv.videoHeight;
+    portrait=h>=w; // auto: portrait or square → single column
+  }
+  document.getElementById('panels-row').style.gridTemplateColumns=portrait?'1fr':'';
+  const maxH=portrait?'560px':'300px';
+  document.querySelectorAll('.vw').forEach(w=>w.style.maxHeight=maxH);
+}
 function adaptAspect(side,video){
   const vw=video.videoWidth,vh=video.videoHeight;if(!vw||!vh)return;
-  const wrap=document.getElementById(`${side}-vw`);
-  wrap.style.aspectRatio=`${vw}/${vh}`;
-  wrap.style.maxHeight=vw>vh?'300px':vw<vh?'520px':'400px';
-  const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
-  const anyLand=(lv.videoWidth>lv.videoHeight&&lv.videoWidth>0)||(rv.videoWidth>rv.videoHeight&&rv.videoWidth>0);
-  document.getElementById('panels-row').style.gridTemplateColumns=anyLand?'1fr':'';
+  document.getElementById(`${side}-vw`).style.aspectRatio=`${vw}/${vh}`;
+  applyVideoLayout();
 }
 
 // ── Tab / Mode ─────────────────────────────────────────────
