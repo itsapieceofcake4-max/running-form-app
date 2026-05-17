@@ -1310,97 +1310,136 @@ function calcSym(h){const D=[];h.forEach(({lm})=>{const checks=[];if(ok(lm,12)&&
 function calcVert(h){const Y=[],Hh=[];h.forEach(({lm})=>{if(ok(lm,23)&&ok(lm,24))Y.push((lm[23].y+lm[24].y)/2);if(ok(lm,0)&&ok(lm,27)&&ok(lm,28))Hh.push(Math.abs((lm[27].y+lm[28].y)/2-lm[0].y));});if(Y.length<8)return null;const dev=sd(Y),avgH=Hh.length?mn(Hh):1,pct=(dev/avgH)*100;const score=pct<=3?100:pct<=6?100-(pct-3)*10:cl(70-(pct-6)*12,0,100);return{pct,score};}
 function calcCad(h){if(h.length<24)return null;const vals=[],times=[];h.forEach(({t,lm})=>{if(ok(lm,23)&&ok(lm,25)){vals.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));times.push(t);}});if(vals.length<16)return null;const m=mn(vals);let cross=0;for(let i=1;i<vals.length;i++)if((vals[i-1]-m)*(vals[i]-m)<0)cross++;const span=(times[times.length-1]-times[0])/1000;if(span<1)return null;const spm=Math.round((cross/2/span)*60);if(spm<60||spm>240)return null;const score=spm>=170&&spm<=190?100:spm>=160&&spm<170?60+(spm-160)*4:spm>190&&spm<=200?100-(spm-190)*4:cl(100-Math.abs(spm-180)*1.2,0,100);return{spm,score};}
 
-// ── Metric SVG Diagrams ────────────────────────────────────
+// ── Metric SVG Diagrams (human stick figures) ──────────────
 function scCol(s){return s>=80?'#00e5ff':s>=50?'#ffd54f':'#ff4081';}
-function svgW(inner){return `<svg viewBox="0 0 120 78" width="100%" style="max-width:120px;display:block;margin:5px auto 2px;overflow:visible">${inner}</svg>`;}
+function svgW(inner){return `<svg viewBox="0 0 140 96" width="100%" style="max-width:140px;display:block;margin:5px auto 2px;overflow:visible">${inner}</svg>`;}
+function p(v){return (+v).toFixed(1);}
 
+// 体幹前傾角: full side-view runner, trunk highlighted
 function svgTrunk(abs,score){
-  const c=scCol(score),f=v=>v.toFixed(1),R=Math.min(abs,38)*Math.PI/180,cx=44,gy=62,L=38;
-  const sx=f(cx+Math.sin(R)*L),sy=f(gy-Math.cos(R)*L),hx=f(cx+Math.sin(R)*(L+9)),hy=f(gy-Math.cos(R)*(L+9));
-  const r5x=f(cx+Math.sin(5*Math.PI/180)*L),r5y=f(gy-Math.cos(5*Math.PI/180)*L);
-  const r15x=f(cx+Math.sin(15*Math.PI/180)*L),r15y=f(gy-Math.cos(15*Math.PI/180)*L);
-  const tip=abs<5?'▶ 前に傾けて':abs>15?'◀ 少し起こして':'';
-  return svgW(`<line x1="5" y1="${gy}" x2="82" y2="${gy}" stroke="#1a1a4a" stroke-width="1.5"/>
-    <line x1="${cx}" y1="${gy}" x2="${cx}" y2="${gy-52}" stroke="#1e1e50" stroke-width="1" stroke-dasharray="2,3"/>
-    <path d="M ${cx} ${gy} L ${r5x} ${r5y} A ${L} ${L} 0 0 1 ${r15x} ${r15y} Z" fill="#00e5ff18" stroke="#00e5ff44" stroke-width="1"/>
-    <line x1="${cx}" y1="${gy}" x2="${sx}" y2="${sy}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="${hx}" cy="${hy}" r="5.5" fill="none" stroke="${c}" stroke-width="2.5"/>
-    <circle cx="${cx}" cy="${gy}" r="3" fill="${c}"/>
-    <text x="104" y="28" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">5〜15°</text>
-    <text x="104" y="37" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">が理想</text>
-    ${tip?`<text x="${cx+2}" y="76" fill="${c}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`:''}`);
+  const c=scCol(score),R=Math.min(abs,35)*Math.PI/180,hpX=52,hpY=64,tL=32;
+  const sXn=hpX+Math.sin(R)*tL,sYn=hpY-Math.cos(R)*tL;
+  const hdXn=sXn+Math.sin(R)*9,hdYn=sYn-Math.cos(R)*9;
+  const r5x=p(hpX+Math.sin(5*Math.PI/180)*tL),r5y=p(hpY-Math.cos(5*Math.PI/180)*tL);
+  const r15x=p(hpX+Math.sin(15*Math.PI/180)*tL),r15y=p(hpY-Math.cos(15*Math.PI/180)*tL);
+  const tip=abs<5?'前傾が足りない':abs>15?'前傾しすぎ':'理想的な前傾 ✓';
+  const tipC=(abs>=5&&abs<=15)?'#00e5ff':c;
+  return svgW(`<line x1="10" y1="86" x2="130" y2="86" stroke="#1a1a4a" stroke-width="1.5"/>
+    <line x1="${hpX}" y1="${hpY}" x2="${hpX}" y2="${hpY-46}" stroke="#1e1e50" stroke-width="1" stroke-dasharray="2,3"/>
+    <path d="M ${hpX} ${hpY} L ${r5x} ${r5y} A ${tL} ${tL} 0 0 1 ${r15x} ${r15y} Z" fill="#00e5ff15"/>
+    <line x1="${hpX}" y1="${hpY}" x2="${hpX-6}" y2="${hpY+18}" stroke="#2a2a6a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${hpX-6}" y1="${hpY+18}" x2="${hpX-12}" y2="86" stroke="#2a2a6a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${hpX}" y1="${hpY}" x2="${hpX+14}" y2="${hpY+4}" stroke="#2a2a6a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${hpX+14}" y1="${hpY+4}" x2="${hpX+22}" y2="${hpY+18}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${p(sXn)}" y1="${p(sYn)}" x2="${p(sXn+7)}" y2="${p(sYn+13)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${p(sXn+7)}" y1="${p(sYn+13)}" x2="${p(sXn+17)}" y2="${p(sYn+9)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${p(sXn)}" y1="${p(sYn)}" x2="${p(sXn-8)}" y2="${p(sYn+11)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${p(sXn-8)}" y1="${p(sYn+11)}" x2="${p(sXn-15)}" y2="${p(sYn+7)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${hpX}" y1="${hpY}" x2="${p(sXn)}" y2="${p(sYn)}" stroke="${c}" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="${p(hdXn)}" cy="${p(hdYn)}" r="8" fill="none" stroke="${c}" stroke-width="2.5"/>
+    <circle cx="${hpX}" cy="${hpY}" r="3.5" fill="${c}"/>
+    <text x="122" y="24" fill="#00e5ff66" font-size="7" text-anchor="middle" font-family="sans-serif">理想</text>
+    <text x="122" y="33" fill="#00e5ff66" font-size="7" text-anchor="middle" font-family="sans-serif">5〜15°</text>
+    <text x="70" y="94" fill="${tipC}" font-size="8.5" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
 }
 
+// 膝の引き上げ: full runner with raised knee highlighted
 function svgKnee(peak,score){
-  const c=scCol(score),f=v=>v.toFixed(1),hx=42,hy=54,L=30;
-  const PR=Math.min(Math.max(peak,0),75)*Math.PI/180,IR=40*Math.PI/180;
-  const kx=f(hx+Math.sin(PR)*L),ky=f(hy-Math.cos(PR)*L);
-  const ix=f(hx+Math.sin(IR)*L),iy=f(hy-Math.cos(IR)*L);
-  const tip=peak<40?'▲ 膝を高く引き上げて':'';
-  return svgW(`<line x1="5" y1="68" x2="86" y2="68" stroke="#1a1a4a" stroke-width="1.5"/>
-    <line x1="${hx}" y1="68" x2="${hx}" y2="${hy}" stroke="#2a2a6a" stroke-width="3.5" stroke-linecap="round"/>
-    <circle cx="${hx}" cy="${hy}" r="4" fill="#2a2a5a"/>
-    <line x1="${hx}" y1="${hy}" x2="${ix}" y2="${iy}" stroke="#00e5ff33" stroke-width="4" stroke-linecap="round" stroke-dasharray="5,3"/>
-    <circle cx="${ix}" cy="${iy}" r="4" fill="none" stroke="#00e5ff44" stroke-width="1.5"/>
-    <line x1="${hx}" y1="${hy}" x2="${kx}" y2="${ky}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="${kx}" cy="${ky}" r="4.5" fill="${c}" opacity=".85"/>
-    <text x="105" y="28" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">40°+</text>
-    <text x="105" y="37" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">が理想</text>
-    ${tip?`<text x="52" y="76" fill="${c}" font-size="7.5" text-anchor="middle" font-family="sans-serif">${tip}</text>`:''}`);
+  const c=scCol(score),hpX=55,hpY=62,tL=30,R=10*Math.PI/180;
+  const sXn=hpX+Math.sin(R)*tL,sYn=hpY-Math.cos(R)*tL;
+  const hdXn=sXn+Math.sin(R)*9,hdYn=sYn-Math.cos(R)*9;
+  const PR=Math.min(Math.max(peak,0),75)*Math.PI/180,thL=28;
+  const knRXn=hpX+Math.sin(PR)*thL,knRYn=hpY-Math.cos(PR)*thL;
+  const ikXn=hpX+Math.sin(40*Math.PI/180)*thL,ikYn=hpY-Math.cos(40*Math.PI/180)*thL;
+  const tip=peak<40?'膝をもっと高く引き上げて':'高い膝引き上げ ✓';
+  const tipC=peak>=40?'#00e5ff':c;
+  return svgW(`<line x1="10" y1="86" x2="130" y2="86" stroke="#1a1a4a" stroke-width="1.5"/>
+    <line x1="${hpX}" y1="${hpY}" x2="${hpX-6}" y2="${hpY+18}" stroke="#2a2a6a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${hpX-6}" y1="${hpY+18}" x2="${hpX-12}" y2="86" stroke="#2a2a6a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${p(sXn)}" y1="${p(sYn)}" x2="${p(sXn-8)}" y2="${p(sYn+11)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${p(sXn-8)}" y1="${p(sYn+11)}" x2="${p(sXn-14)}" y2="${p(sYn+7)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${p(sXn)}" y1="${p(sYn)}" x2="${p(sXn+7)}" y2="${p(sYn+13)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${p(sXn+7)}" y1="${p(sYn+13)}" x2="${p(sXn+17)}" y2="${p(sYn+9)}" stroke="#2a2a6a" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="${hpX}" y1="${hpY}" x2="${p(sXn)}" y2="${p(sYn)}" stroke="#3a3a7a" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${p(hdXn)}" cy="${p(hdYn)}" r="8" fill="none" stroke="#3a3a7a" stroke-width="2.5"/>
+    <line x1="${hpX}" y1="${hpY}" x2="${p(ikXn)}" y2="${p(ikYn)}" stroke="#00e5ff30" stroke-width="4" stroke-linecap="round" stroke-dasharray="5,3"/>
+    <circle cx="${p(ikXn)}" cy="${p(ikYn)}" r="5" fill="none" stroke="#00e5ff55" stroke-width="1.5"/>
+    <text x="${p(ikXn+9)}" y="${p(ikYn+3)}" fill="#00e5ff66" font-size="7" font-family="sans-serif">理想</text>
+    <line x1="${hpX}" y1="${hpY}" x2="${p(knRXn)}" y2="${p(knRYn)}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="${p(knRXn)}" cy="${p(knRYn)}" r="5.5" fill="${c}" opacity=".9"/>
+    <line x1="${p(knRXn)}" y1="${p(knRYn)}" x2="${p(knRXn+5)}" y2="${p(knRYn+20)}" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+    <circle cx="${hpX}" cy="${hpY}" r="3.5" fill="#3a3a7a"/>
+    <text x="70" y="94" fill="${tipC}" font-size="8.5" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
 }
 
+// 腕振り角度: upper body + arm with elbow angle
 function svgArm(avg,score){
-  const c=scCol(score),f=v=>v.toFixed(1),L=26,ex=32,ey=44;
+  const c=scCol(score),shX=42,shY=30,uAL=22,exX=42,eyY=52,fAL=20;
   const fDx=Math.sin(avg*Math.PI/180),fDy=-Math.cos(avg*Math.PI/180);
-  const fx=f(ex+fDx*L),fy=f(ey+fDy*L),ix=f(ex+L);
-  const tip=avg>100?'▲ 肘をもっと曲げて':avg<80?'▼ 肘をもう少し伸ばして':'';
-  return svgW(`<circle cx="32" cy="18" r="6" fill="none" stroke="#2a2a6a" stroke-width="2.5"/>
-    <line x1="32" y1="24" x2="${ex}" y2="${ey}" stroke="#2a2a6a" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="${ex}" cy="${ey}" r="4" fill="#2a2a5a"/>
-    <line x1="${ex}" y1="${ey}" x2="${ix}" y2="${ey}" stroke="#00e5ff33" stroke-width="4" stroke-linecap="round" stroke-dasharray="5,3"/>
-    <line x1="${ex}" y1="${ey}" x2="${fx}" y2="${fy}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="${fx}" cy="${fy}" r="3.5" fill="${c}" opacity=".85"/>
-    <text x="108" y="46" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">90°</text>
-    <text x="108" y="55" fill="#00e5ff66" font-size="6.5" text-anchor="middle" font-family="sans-serif">が理想</text>
-    ${tip?`<text x="65" y="76" fill="${c}" font-size="7" text-anchor="middle" font-family="sans-serif">${tip}</text>`:''}`);
+  const fxn=exX+fDx*fAL,fyn=eyY+fDy*fAL;
+  const tip=avg>100?'肘をもっと曲げて':avg<80?'肘をもう少し伸ばして':'理想の肘角度 ✓';
+  const tipC=(Math.abs(avg-90)<=10)?'#00e5ff':c;
+  return svgW(`<circle cx="${shX}" cy="${shY-12}" r="8" fill="none" stroke="#3a3a7a" stroke-width="2.5"/>
+    <line x1="${shX}" y1="${shY-4}" x2="${shX}" y2="${shY+32}" stroke="#3a3a7a" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${shX}" y1="${shY}" x2="${exX}" y2="${eyY}" stroke="#3a3a7a" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${exX}" cy="${eyY}" r="5" fill="#2a2a5a" stroke="${c}" stroke-width="2"/>
+    <line x1="${exX}" y1="${eyY}" x2="${p(exX+fAL)}" y2="${eyY}" stroke="#00e5ff33" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="5,3"/>
+    <text x="${p(exX+fAL+4)}" y="${eyY-2}" fill="#00e5ff66" font-size="7" font-family="sans-serif">90°</text>
+    <text x="${p(exX+fAL+4)}" y="${eyY+8}" fill="#00e5ff66" font-size="7" font-family="sans-serif">理想</text>
+    <line x1="${exX}" y1="${eyY}" x2="${p(fxn)}" y2="${p(fyn)}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${p(fxn)}" cy="${p(fyn)}" r="4" fill="${c}" opacity=".9"/>
+    <text x="${p(exX+16)}" y="${p(eyY-18)}" fill="${c}" font-size="9" font-weight="bold" font-family="sans-serif">${Math.round(avg)}°</text>
+    <text x="70" y="94" fill="${tipC}" font-size="8.5" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
 }
 
+// 左右対称性: front-view full figure with both legs
 function svgSym(avg,score){
-  const c=scCol(score),f=v=>v.toFixed(1),cx=60,cy=30,L=26;
-  const lA=30*Math.PI/180,rA=(30+Math.min(avg*0.5,18))*Math.PI/180;
-  const lx=f(cx-Math.sin(lA)*L),ly=f(cy+Math.cos(lA)*L);
-  const rx=f(cx+Math.sin(rA)*L),ry=f(cy+Math.cos(rA)*L);
+  const c=scCol(score),cx=70,cy=36,legL=26;
+  const lA=25*Math.PI/180,rA=(25+Math.min(avg*0.5,20))*Math.PI/180;
+  const lKnX=cx-Math.sin(lA)*legL,lKnY=cy+Math.cos(lA)*legL;
+  const rKnX=cx+Math.sin(rA)*legL,rKnY=cy+Math.cos(rA)*legL;
   const ok=score>=80;
-  return svgW(`<circle cx="${cx}" cy="${cy-14}" r="6" fill="none" stroke="#2a2a6a" stroke-width="2.5"/>
-    <line x1="${cx}" y1="${cy-8}" x2="${cx}" y2="${cy}" stroke="#2a2a6a" stroke-width="3"/>
-    <line x1="${cx-18}" y1="${cy-4}" x2="${cx+18}" y2="${cy-4}" stroke="#2a2a6a" stroke-width="2.5"/>
-    <line x1="${cx}" y1="${cy}" x2="${lx}" y2="${ly}" stroke="${ok?c:'#00e5ff88'}" stroke-width="4" stroke-linecap="round"/>
-    <line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
-    <text x="${cx}" y="74" fill="${ok?'#00e5ff88':c}" font-size="7.5" text-anchor="middle" font-family="sans-serif">${ok?'左右対称 ✓':'差 '+avg.toFixed(0)+'° → 左右を揃えて'}</text>`);
+  const tip=ok?'左右対称 ✓':`差${avg.toFixed(0)}° → 左右を揃えて`;
+  return svgW(`<circle cx="${cx}" cy="${cy-20}" r="8" fill="none" stroke="#3a3a7a" stroke-width="2.5"/>
+    <line x1="${cx}" y1="${cy-12}" x2="${cx}" y2="${cy}" stroke="#3a3a7a" stroke-width="3"/>
+    <line x1="${cx-20}" y1="${cy-5}" x2="${cx+20}" y2="${cy-5}" stroke="#3a3a7a" stroke-width="2.5"/>
+    <line x1="${cx}" y1="${cy}" x2="${p(lKnX)}" y2="${p(lKnY)}" stroke="${ok?c:'#00e5ff88'}" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="${p(lKnX)}" y1="${p(lKnY)}" x2="${p(lKnX-4)}" y2="${p(lKnY+18)}" stroke="${ok?c:'#00e5ff88'}" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${cx}" y1="${cy}" x2="${p(rKnX)}" y2="${p(rKnY)}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="${p(rKnX)}" y1="${p(rKnY)}" x2="${p(rKnX+5)}" y2="${p(rKnY+18)}" stroke="${c}" stroke-width="3" stroke-linecap="round"/>
+    <text x="${cx}" y="94" fill="${ok?'#00e5ff':c}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
 }
 
+// 上下動: running path wave + small runner silhouette
 function svgVert(pct,score){
-  const c=scCol(score),midY=36,amp=Math.min(pct*3.5,22),iAmp=8;
-  const xs=Array.from({length:19},(_,i)=>10+i*5);
-  const wave=xs.map((x,i)=>`${x},${(midY-amp*Math.sin(i*Math.PI/3)).toFixed(1)}`).join(' L ');
-  const ideal=xs.map((x,i)=>`${x},${(midY-iAmp*Math.sin(i*Math.PI/3)).toFixed(1)}`).join(' L ');
-  const tip=pct>4?'上下に跳ねすぎ → 水平に走って':'';
-  return svgW(`<line x1="5" y1="65" x2="112" y2="65" stroke="#1a1a4a" stroke-width="1.5"/>
-    <path d="M ${ideal}" fill="none" stroke="#00e5ff33" stroke-width="2" stroke-dasharray="5,3"/>
+  const c=scCol(score),midY=44,amp=Math.min(pct*3.5,24),iAmp=9;
+  const xs=Array.from({length:21},(_,i)=>14+i*5.5);
+  const wave=xs.map((x,i)=>`${x.toFixed(1)},${(midY-amp*Math.sin(i*Math.PI/3.5)).toFixed(1)}`).join(' L ');
+  const ideal=xs.map((x,i)=>`${x.toFixed(1)},${(midY-iAmp*Math.sin(i*Math.PI/3.5)).toFixed(1)}`).join(' L ');
+  const tip=pct>4?'上下に跳ねすぎ（水平に走って）':pct>3?'やや上下が大きい':'安定した走り ✓';
+  const tipC=pct<=3?'#00e5ff':c;
+  return svgW(`<line x1="5" y1="74" x2="135" y2="74" stroke="#1a1a4a" stroke-width="1.5"/>
+    <path d="M ${ideal}" fill="none" stroke="#00e5ff33" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="9" y="${p(midY-iAmp-3)}" fill="#00e5ff66" font-size="6.5" font-family="sans-serif">理想</text>
     <path d="M ${wave}" fill="none" stroke="${c}" stroke-width="2.5"/>
-    <text x="7" y="17" fill="#00e5ff55" font-size="6.5" font-family="sans-serif">理想</text>
-    <text x="60" y="76" fill="${tip?c:'#00e5ff88'}" font-size="7" text-anchor="middle" font-family="sans-serif">${tip||'安定した走り ✓'}</text>`);
+    ${amp>15?`<line x1="8" y1="${p(midY-amp)}" x2="8" y2="${p(midY+amp)}" stroke="${c}" stroke-width="1.5" stroke-dasharray="2,2"/>
+    <text x="8" y="${p(midY-amp-3)}" fill="${c}" font-size="7" text-anchor="middle" font-family="sans-serif">↕${pct.toFixed(1)}%</text>`:''}
+    <text x="70" y="90" fill="${tipC}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
 }
 
+// ケイデンス: footstep dot timeline comparing ideal vs actual pace
 function svgCad(spm,score){
-  const c=scCol(score),iSp=18,aSp=180/Math.max(spm,60)*iSp,ys=[34,54];
-  const iSteps=[10,28,46,64,82];
-  const aSteps=[];for(let i=0;i<7;i++){const x=10+i*aSp;if(x>108)break;aSteps.push(x);}
-  const tip=spm<160?'▶ もっと細かく踏んで':spm>200?'もう少しゆっくり':'';
-  return svgW(`<line x1="5" y1="44" x2="110" y2="44" stroke="#1a1a4a" stroke-width="1"/>
-    ${iSteps.map((x,i)=>`<circle cx="${x}" cy="${ys[i%2]}" r="5.5" fill="#00e5ff18" stroke="#00e5ff44" stroke-width="1.5"/>`).join('')}
-    ${aSteps.map((x,i)=>`<circle cx="${x.toFixed(1)}" cy="${ys[i%2]}" r="5.5" fill="${c}33" stroke="${c}" stroke-width="2"/>`).join('')}
-    <text x="60" y="75" fill="${tip?c:'#00e5ff88'}" font-size="7.5" text-anchor="middle" font-family="sans-serif">${tip||'理想ペース ✓'}</text>`);
+  const c=scCol(score),iSp=17,aSp=180/Math.max(spm,60)*iSp;
+  const iSteps=[10,27,44,61,78,95];
+  const aSteps=[];for(let i=0;i<9;i++){const x=10+i*aSp;if(x>128)break;aSteps.push(x);}
+  const tip=spm<160?'ピッチを上げて（細かく踏む）':spm>200?'ピッチを落として':'理想のペース ✓';
+  const tipC=(spm>=160&&spm<=200)?'#00e5ff':c;
+  return svgW(`<line x1="5" y1="46" x2="133" y2="46" stroke="#1a1a4a" stroke-width="1"/>
+    <text x="7" y="26" fill="#00e5ff55" font-size="7" font-family="sans-serif">理想(180spm)</text>
+    <text x="7" y="64" fill="${c}99" font-size="7" font-family="sans-serif">実際(${spm}spm)</text>
+    ${iSteps.map(x=>`<circle cx="${x}" cy="34" r="6" fill="#00e5ff18" stroke="#00e5ff55" stroke-width="1.5"/>`).join('')}
+    ${aSteps.map(x=>`<circle cx="${x.toFixed(1)}" cy="58" r="6" fill="${c}33" stroke="${c}" stroke-width="2"/>`).join('')}
+    <text x="70" y="88" fill="${tipC}" font-size="8" text-anchor="middle" font-family="sans-serif">${tip}</text>`);
 }
 
 function metricSVG(key,m){
