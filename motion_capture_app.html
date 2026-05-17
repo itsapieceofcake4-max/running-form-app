@@ -503,6 +503,12 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 
 </div>
 
+<!-- Range preview popup -->
+<div id="rs-preview" style="display:none;position:fixed;z-index:60;flex-direction:column;pointer-events:none;filter:drop-shadow(0 4px 14px #000d)">
+  <canvas id="rs-preview-canvas" style="display:block;border-radius:8px 8px 0 0;border:2px solid #00e5ff;border-bottom:none;background:#08080f"></canvas>
+  <div id="rs-preview-time" style="background:#0a0a1f;border:2px solid #00e5ff;border-top:none;border-radius:0 0 8px 8px;text-align:center;font-size:.78rem;color:#00e5ff;padding:3px 10px;font-family:monospace;font-weight:700;letter-spacing:.06em"></div>
+</div>
+
 <div class="lov" id="loading">
   <div class="sp"></div>
   <div class="lt" id="lt">MediaPipe モデルを読み込み中...<br><small style="font-size:.72rem;color:#606080">初回のみ時間がかかります</small></div>
@@ -894,14 +900,15 @@ function rsDown(e){
 function rsMove(e){
   if(!rsD)return;e.preventDefault();
   const cx=e.touches?e.touches[0].clientX:e.clientX;
+  const cy=e.touches?e.touches[0].clientY:e.clientY;
   const{side,which,left,w}=rsD,s=S[side],dur=s.duration||1;
   let t=Math.max(0,Math.min(dur,(cx-left)/w*dur));
   if(which==='s'){s.rangeStart=Math.min(t,s.rangeEnd-0.5);s.rangeStart=Math.max(0,s.rangeStart);}
   else{s.rangeEnd=Math.max(t,s.rangeStart+0.5);s.rangeEnd=Math.min(dur,s.rangeEnd);}
+  const seekT=which==='s'?s.rangeStart:s.rangeEnd;
   const v=document.getElementById(`${side}-video`);
-  if(v.readyState>=1)v.currentTime=which==='s'?s.rangeStart:s.rangeEnd;
+  if(v.readyState>=1){v.currentTime=seekT;showRangePreview(side,cx,cy,seekT);}
   updateRangeSel(side);
-  // Refresh bar rect in case of scroll
   const bar=document.getElementById(`${side}-rs-bar`);
   if(bar){const r=bar.getBoundingClientRect();rsD.left=r.left;rsD.w=r.width;}
 }
@@ -911,6 +918,46 @@ function rsUp(){
     if(h)h.classList.remove('drag');
   }
   rsD=null;
+  const p=document.getElementById('rs-preview');if(p)p.style.display='none';
+}
+
+// ── Range preview thumbnail ────────────────────────────────
+function showRangePreview(side,cx,cy,time){
+  const v=document.getElementById(`${side}-video`);
+  if(!v||v.readyState<1||!v.videoWidth)return;
+  const prev=document.getElementById('rs-preview');
+  const pc=document.getElementById('rs-preview-canvas');
+  const pt=document.getElementById('rs-preview-time');
+  if(!prev||!pc||!pt)return;
+
+  // Compute preview size preserving aspect ratio
+  const ar=v.videoWidth/v.videoHeight||9/16;
+  const PW=Math.round(Math.min(180,window.innerWidth*0.42));
+  const PH=Math.round(PW/ar);
+  pc.width=PW;pc.height=PH;
+  pc.style.width=PW+'px';pc.style.height=PH+'px';
+
+  // Position: above handle, clamped to viewport
+  let lx=cx-PW/2;
+  let ty=cy-PH-32;
+  lx=Math.max(8,Math.min(window.innerWidth-PW-8,lx));
+  if(ty<8)ty=cy+22;
+  prev.style.cssText=`display:flex;left:${lx}px;top:${ty}px`;
+
+  // Draw frame after seek
+  const draw=()=>{
+    pc.getContext('2d').drawImage(v,0,0,PW,PH);
+    const s=Math.round(time%60),m=Math.floor(time/60);
+    pt.textContent=`${m}:${String(s).padStart(2,'0')}`;
+    // Also draw to main panel canvas for immediate feedback
+    const mc=document.getElementById(`${side}-canvas`);
+    if(mc&&mc.parentElement&&mc.style.display!=='none'){
+      const mw=mc.parentElement.clientWidth,mh=mc.parentElement.clientHeight;
+      mc.width=mw;mc.height=mh;
+      mc.getContext('2d').drawImage(v,0,0,mw,mh);
+    }
+  };
+  v.addEventListener('seeked',draw,{once:true});
 }
 
 function resetAnalysis(){
