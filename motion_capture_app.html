@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="フォーム解析">
+<meta name="theme-color" content="#0d0d1f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <title>ランニングフォーム解析</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -1614,6 +1619,7 @@ window.addEventListener('load',()=>{
   setTimeout(initPoses,400);
   updateGoal();
   buildVisualPicker();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 });
 document.getElementById('left-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('left');});
 document.getElementById('right-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('right');});
