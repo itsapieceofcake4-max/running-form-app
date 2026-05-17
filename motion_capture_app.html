@@ -142,7 +142,8 @@ input:checked+.sws:before{transform:translateX(15px)}
 .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;align-content:start}
 .mc{background:#0a0a1f;border:1px solid #1e1e40;border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:4px}
 .mc-top{display:flex;justify-content:space-between;align-items:center}
-.mc-name{font-size:.69rem;color:#8080b0}
+.mc-name{font-size:.72rem;color:#c0c0e0;font-weight:600}
+.mc-desc{font-size:.63rem;color:#5a7090;line-height:1.3;margin-top:1px}
 .mc-sc{font-size:.74rem;font-weight:700}
 .mc-val{font-size:1.1rem;font-weight:700}
 .mc-unit{font-size:.64rem;color:#6080a0;margin-left:2px}
@@ -1457,17 +1458,17 @@ function metricSVG(key,m){
 // ── Render results ─────────────────────────────────────────
 function renderCards(m){
   const cards=[
-    {key:'trunk',name:'体幹前傾角',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
-    {key:'knee',name:'膝の引き上げ',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想40°+',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
-    {key:'arm',name:'腕振り角度',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
-    {key:'sym',name:'左右対称性',val:m.sym?`${Math.round(m.sym.score)}%`:'--',unit:'左右の差',sc:m.sym?.score??null,lbl:m.sym?(m.sym.avg<8?'対称':'非対称あり'):'--'},
-    {key:'vert',name:'上下動',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
-    {key:'cad',name:'ケイデンス',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
+    {key:'trunk',name:'体幹前傾角',desc:'重力を推進力に変換。省エネな走りの土台',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
+    {key:'knee',name:'膝の引き上げ',desc:'歩幅と推進力に影響。スピードアップの鍵',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想40°+',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
+    {key:'arm',name:'腕振り角度',desc:'体幹の回転を抑えバランスとリズムを安定させる',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
+    {key:'sym',name:'左右対称性',desc:'筋力・柔軟性の左右差を反映。非対称はケガの予兆',val:m.sym?`${Math.round(m.sym.score)}%`:'--',unit:'左右の差',sc:m.sym?.score??null,lbl:m.sym?(m.sym.avg<8?'対称':'非対称あり'):'--'},
+    {key:'vert',name:'上下動',desc:'前進に使われない縦方向のエネルギーロス。スタミナに影響',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
+    {key:'cad',name:'ケイデンス',desc:'着地衝撃とケガ予防に影響。高いほど膝・腰への負担が小さい',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
   ];
   document.getElementById('metric-grid').innerHTML=cards.map(c=>{
     const sc=c.sc??0,clr=c.sc!==null?col(sc):'#404060';
     const diag=metricSVG(c.key,m);
-    return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div>${diag}<div class="mc-lbl">${c.lbl}</div></div>`;
+    return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-desc">${c.desc}</div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div>${diag}<div class="mc-lbl">${c.lbl}</div></div>`;
   }).join('');
 }
 function renderAdvice(m){
