@@ -176,6 +176,21 @@ input:checked+.sws:before{transform:translateX(15px)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .lt{font-size:.82rem;color:#8080b0;text-align:center;padding:0 20px}
 
+/* ── Range Selector ── */
+.range-sel{padding:7px 12px 9px;background:#0d0d20;border-top:1px solid #1a1a3a;display:none}
+.range-sel.show{display:block}
+.rs-label{font-size:.68rem;color:#6080a0;margin-bottom:7px}
+.rs-bar-wrap{padding:10px 0 4px}
+.rs-bar{position:relative;height:5px;background:#1e1e40;border-radius:5px;margin:0 11px;cursor:pointer}
+.rs-fill{position:absolute;top:0;height:100%;background:linear-gradient(90deg,#00b8d4,#00e5ff);border-radius:5px;pointer-events:none}
+.rs-handle{position:absolute;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;border:2.5px solid;cursor:grab;touch-action:none;z-index:3;transition:box-shadow .15s}
+.rs-handle:active,.rs-handle.drag{cursor:grabbing;box-shadow:0 0 0 6px rgba(255,255,255,.08)!important}
+.rs-s{background:#00e5ff;border-color:#00b8d4;box-shadow:0 0 5px #00e5ff55}
+.rs-e{background:#ff4081;border-color:#c62870;box-shadow:0 0 5px #ff408155}
+.rs-ph{position:absolute;top:-7px;bottom:-7px;width:2px;background:#ffd54f99;border-radius:2px;pointer-events:none;transform:translateX(-50%)}
+.rs-times{display:flex;justify-content:space-between;align-items:center;font-size:.66rem;color:#5060a0;padding:0 10px;margin-top:1px}
+.rs-range-lbl{color:#00e5ff;font-weight:700;font-size:.7rem;text-align:center}
+
 /* Responsive */
 @media(max-width:640px){
   .panels-row{grid-template-columns:1fr}
@@ -240,6 +255,22 @@ input:checked+.sws:before{transform:translateX(15px)}
         <canvas id="left-canvas"></canvas>
         <div class="tke" id="left-tke"></div>
       </div>
+      <div class="range-sel" id="left-range-sel">
+        <div class="rs-label" id="left-rs-lbl">✂ 解析範囲（全体）</div>
+        <div class="rs-bar-wrap">
+          <div class="rs-bar" id="left-rs-bar">
+            <div class="rs-fill" id="left-rs-fill" style="left:0%;width:100%"></div>
+            <div class="rs-handle rs-s" id="left-rs-s" data-side="left" data-which="s" style="left:0%"></div>
+            <div class="rs-handle rs-e" id="left-rs-e" data-side="left" data-which="e" style="left:100%"></div>
+            <div class="rs-ph" id="left-rs-ph" style="left:0%"></div>
+          </div>
+        </div>
+        <div class="rs-times">
+          <span id="left-rs-t0">0:00</span>
+          <span class="rs-range-lbl" id="left-rs-range">全体</span>
+          <span id="left-rs-tdur">--:--</span>
+        </div>
+      </div>
       <div class="tknote" id="left-tknote" style="display:none">※ TikTok埋め込みはモーション解析非対応</div>
       <div class="statusb" id="left-sb">動画を読み込んでください</div>
     </div>
@@ -282,6 +313,22 @@ input:checked+.sws:before{transform:translateX(15px)}
         <video id="right-video" loop playsinline></video>
         <canvas id="right-canvas"></canvas>
         <div class="tke" id="right-tke"></div>
+      </div>
+      <div class="range-sel" id="right-range-sel">
+        <div class="rs-label" id="right-rs-lbl">✂ 解析範囲（全体）</div>
+        <div class="rs-bar-wrap">
+          <div class="rs-bar" id="right-rs-bar">
+            <div class="rs-fill" id="right-rs-fill" style="left:0%;width:100%"></div>
+            <div class="rs-handle rs-s" id="right-rs-s" data-side="right" data-which="s" style="left:0%"></div>
+            <div class="rs-handle rs-e" id="right-rs-e" data-side="right" data-which="e" style="left:100%"></div>
+            <div class="rs-ph" id="right-rs-ph" style="left:0%"></div>
+          </div>
+        </div>
+        <div class="rs-times">
+          <span id="right-rs-t0">0:00</span>
+          <span class="rs-range-lbl" id="right-rs-range">全体</span>
+          <span id="right-rs-tdur">--:--</span>
+        </div>
       </div>
       <div class="tknote" id="right-tknote" style="display:none">※ TikTok埋め込みはモーション解析非対応</div>
       <div class="statusb" id="right-sb">動画を読み込んでください</div>
@@ -440,12 +487,13 @@ const RUN_TYPES={
 
 // ── State ──────────────────────────────────────────────────
 const S={
-  left:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null},
-  right:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null},
+  left:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null,rangeStart:0,rangeEnd:null,duration:0},
+  right:{pose:null,landmarks:null,processing:false,hasVideo:false,isTikTok:false,url:null,cameraStream:null,isCollecting:false,isRecording:false,recStart:null,recTimer:null,rangeStart:0,rangeEnd:null,duration:0},
   playing:false,showSkeleton:true,showVideo:true,
   animId:null,lastT:0,mode:'running',panel:'left'
 };
 const HIST={left:[],right:[]};
+let rsD=null; // active drag: {side,which,left,w}
 
 // ── Utils ──────────────────────────────────────────────────
 function ang(a,b,c){const ba={x:a.x-b.x,y:a.y-b.y},bc={x:c.x-b.x,y:c.y-b.y};const d=ba.x*bc.x+ba.y*bc.y,m=Math.sqrt((ba.x**2+ba.y**2))*Math.sqrt((bc.x**2+bc.y**2));return m?Math.acos(Math.max(-1,Math.min(1,d/m)))*180/Math.PI:0;}
@@ -570,14 +618,70 @@ function updateCollectionUI(side){
   const v=document.getElementById(`${side}-video`);
   const s=S[side];
   if(!s.cameraStream&&v.duration>0){
-    const pct=Math.round((v.currentTime/v.duration)*100);
+    const rS=s.rangeStart||0,rE=s.rangeEnd||v.duration;
+    const rangeDur=rE-rS;
+    const pct=Math.round(Math.max(0,Math.min(100,(v.currentTime-rS)/rangeDur*100)));
     document.getElementById('collect-fill').style.width=pct+'%';
     document.getElementById('collect-title').textContent=`フォームデータを収集中... ${pct}%`;
-    const cur=Math.round(v.currentTime),dur=Math.round(v.duration);
-    document.getElementById('collect-time-stat').textContent=`${fmtTime(cur)} / ${fmtTime(dur)}`;
+    document.getElementById('collect-time-stat').textContent=`${fmtTime(Math.round(v.currentTime))} / ${fmtTime(Math.round(rE))}`;
+    // Update playhead on range bar
+    if(s.duration>0){
+      const ph=document.getElementById(`${side}-rs-ph`);
+      if(ph)ph.style.left=(v.currentTime/s.duration*100)+'%';
+    }
   }
 }
 function fmtTime(sec){return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;}
+
+// ── Range Selector ─────────────────────────────────────────
+function initRangeSel(side,dur){
+  const s=S[side];
+  s.duration=dur;s.rangeStart=0;s.rangeEnd=dur;
+  document.getElementById(`${side}-range-sel`).classList.add('show');
+  updateRangeSel(side);
+}
+function updateRangeSel(side){
+  const s=S[side],dur=s.duration||1;
+  const pS=s.rangeStart/dur*100,pE=s.rangeEnd/dur*100;
+  document.getElementById(`${side}-rs-s`).style.left=pS+'%';
+  document.getElementById(`${side}-rs-e`).style.left=pE+'%';
+  const fill=document.getElementById(`${side}-rs-fill`);
+  fill.style.left=pS+'%';fill.style.width=(pE-pS)+'%';
+  document.getElementById(`${side}-rs-t0`).textContent=fmtTime(Math.round(s.rangeStart));
+  document.getElementById(`${side}-rs-tdur`).textContent=fmtTime(Math.round(s.rangeEnd));
+  const len=s.rangeEnd-s.rangeStart;
+  const full=s.rangeStart<0.3&&Math.abs(s.rangeEnd-s.duration)<0.3;
+  document.getElementById(`${side}-rs-range`).textContent=full?'全体':`${fmtTime(Math.round(len))}`;
+  document.getElementById(`${side}-rs-lbl`).textContent=full?'✂ 解析範囲（全体）':`✂ 解析範囲: ${fmtTime(Math.round(s.rangeStart))} 〜 ${fmtTime(Math.round(s.rangeEnd))}`;
+}
+function rsDown(e){
+  e.preventDefault();e.stopPropagation();
+  const h=e.currentTarget,side=h.dataset.side,which=h.dataset.which;
+  const bar=document.getElementById(`${side}-rs-bar`),rect=bar.getBoundingClientRect();
+  rsD={side,which,left:rect.left,w:rect.width};
+  h.classList.add('drag');
+}
+function rsMove(e){
+  if(!rsD)return;e.preventDefault();
+  const cx=e.touches?e.touches[0].clientX:e.clientX;
+  const{side,which,left,w}=rsD,s=S[side],dur=s.duration||1;
+  let t=Math.max(0,Math.min(dur,(cx-left)/w*dur));
+  if(which==='s'){s.rangeStart=Math.min(t,s.rangeEnd-0.5);s.rangeStart=Math.max(0,s.rangeStart);}
+  else{s.rangeEnd=Math.max(t,s.rangeStart+0.5);s.rangeEnd=Math.min(dur,s.rangeEnd);}
+  const v=document.getElementById(`${side}-video`);
+  if(v.readyState>=1)v.currentTime=which==='s'?s.rangeStart:s.rangeEnd;
+  updateRangeSel(side);
+  // Refresh bar rect in case of scroll
+  const bar=document.getElementById(`${side}-rs-bar`);
+  if(bar){const r=bar.getBoundingClientRect();rsD.left=r.left;rsD.w=r.width;}
+}
+function rsUp(){
+  if(rsD){
+    const h=document.getElementById(`${rsD.side}-rs-${rsD.which}`);
+    if(h)h.classList.remove('drag');
+  }
+  rsD=null;
+}
 
 function resetAnalysis(){
   HIST[S.panel]=[];
@@ -592,8 +696,11 @@ function loadVideoFile(side,inp){
   const video=document.getElementById(`${side}-video`);
   if(s.url)URL.revokeObjectURL(s.url);
   s.url=URL.createObjectURL(file);
-  video.srcObject=null;video.src=s.url;video.load();
-  video.addEventListener('loadedmetadata',()=>adaptAspect(side,video),{once:true});
+  video.srcObject=null;video.src=s.url;video.loop=false;video.load();
+  video.addEventListener('loadedmetadata',()=>{
+    adaptAspect(side,video);
+    initRangeSel(side,video.duration);
+  },{once:true});
 
   // When video ends → finish analysis
   video.addEventListener('ended',()=>{
@@ -737,8 +844,8 @@ function syncPlay(){
   showStateCollecting(false);
 
   const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
-  if(S.left.hasVideo&&!S.left.cameraStream)lv.play();
-  if(S.right.hasVideo&&!S.right.cameraStream)rv.play();
+  if(S.left.hasVideo&&!S.left.cameraStream){lv.currentTime=S.left.rangeStart;lv.play();}
+  if(S.right.hasVideo&&!S.right.cameraStream){rv.currentTime=S.right.rangeStart;rv.play();}
   S.playing=true;document.getElementById('btn-play').classList.add('on');
   if(!S.animId)S.animId=requestAnimationFrame(loop);
 }
@@ -755,8 +862,8 @@ function pauseAll(){
 function resetAll(){
   pauseAll();
   const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
-  if(!S.left.cameraStream){lv.currentTime=0;S.left.isCollecting=false;}
-  if(!S.right.cameraStream){rv.currentTime=0;S.right.isCollecting=false;}
+  if(!S.left.cameraStream){lv.currentTime=S.left.rangeStart||0;S.left.isCollecting=false;}
+  if(!S.right.cameraStream){rv.currentTime=S.right.rangeStart||0;S.right.isCollecting=false;}
   HIST.left=[];HIST.right=[];
   showStateWaiting();
 }
@@ -766,6 +873,14 @@ function loop(ts){
   if(!S.playing){S.animId=null;return;}
   if(ts-S.lastT>=FRAME_MS){
     S.lastT=ts;
+    // Check range end for file videos
+    ['left','right'].forEach(side=>{
+      const s=S[side];
+      if(s.hasVideo&&!s.cameraStream&&s.isCollecting&&s.rangeEnd!==null){
+        const v=document.getElementById(`${side}-video`);
+        if(v.currentTime>=s.rangeEnd-0.15){finishAnalysis(side);}
+      }
+    });
     sendFrame('left');sendFrame('right');
     if(S.mode==='running'&&(S.left.isCollecting||S.right.isCollecting)){
       updateCollectionUI(S.panel);
@@ -889,6 +1004,18 @@ window.addEventListener('load',()=>{
 document.getElementById('left-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('left');});
 document.getElementById('right-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('right');});
 window.addEventListener('resize',()=>{drawRadar([null,null,null,null,null,null]);});
+
+// Range selector drag events
+document.addEventListener('mousemove',rsMove);
+document.addEventListener('mouseup',rsUp);
+document.addEventListener('touchmove',rsMove,{passive:false});
+document.addEventListener('touchend',rsUp);
+['left','right'].forEach(side=>{
+  ['s','e'].forEach(which=>{
+    const h=document.getElementById(`${side}-rs-${which}`);
+    if(h){h.addEventListener('mousedown',rsDown);h.addEventListener('touchstart',rsDown,{passive:false});}
+  });
+});
 </script>
 </body>
 </html>
