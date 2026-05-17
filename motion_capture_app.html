@@ -802,17 +802,27 @@ function onRes(side,r){
   const ctx=canvas.getContext('2d');
   const w=canvas.parentElement.clientWidth,h=canvas.parentElement.clientHeight;
   canvas.width=w;canvas.height=h;ctx.clearRect(0,0,w,h);
-  if(S.showVideo)ctx.drawImage(r.image,0,0,w,h);
+  // Letterbox: draw video at correct aspect ratio (no stretching)
+  const img=r.image;
+  const vW=img.videoWidth||img.width||w,vH=img.videoHeight||img.height||h;
+  let dx=0,dy=0,dw=w,dh=h;
+  if(vW>0&&vH>0){
+    const vR=vW/vH,cR=w/h;
+    if(vR<cR){dw=h*vR;dx=(w-dw)/2;}      // 縦長動画→左右に黒帯
+    else if(vR>cR){dh=w/vR;dy=(h-dh)/2;} // 横長動画→上下に黒帯
+  }
+  if(S.showVideo)ctx.drawImage(img,dx,dy,dw,dh);
   else{ctx.fillStyle='#08080f';ctx.fillRect(0,0,w,h);}
   if(r.poseLandmarks){
     s.landmarks=r.poseLandmarks;
-    // Only collect if analysis is active
     if(s.isCollecting&&HIST[side].length<HIST_MAX){
       HIST[side].push({t:performance.now(),lm:r.poseLandmarks});
     }
     if(S.showSkeleton){
-      drawConnectors(ctx,r.poseLandmarks,POSE_CONN,{color:side==='left'?'#00e5ff':'#ff4081',lineWidth:IS_MOBILE?2:2.5});
-      drawLandmarks(ctx,r.poseLandmarks,{color:'#fff',fillColor:side==='left'?'#00e5ff':'#ff4081',lineWidth:1,radius:IS_MOBILE?3:4});
+      // Remap landmarks to letterboxed area so skeleton lines up with video
+      const lms=r.poseLandmarks.map(lm=>({...lm,x:(dx+lm.x*dw)/w,y:(dy+lm.y*dh)/h}));
+      drawConnectors(ctx,lms,POSE_CONN,{color:side==='left'?'#00e5ff':'#ff4081',lineWidth:IS_MOBILE?2:2.5});
+      drawLandmarks(ctx,lms,{color:'#fff',fillColor:side==='left'?'#00e5ff':'#ff4081',lineWidth:1,radius:IS_MOBILE?3:4});
     }
   }else s.landmarks=null;
   s.processing=false;
