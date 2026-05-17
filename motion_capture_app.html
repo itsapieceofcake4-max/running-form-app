@@ -1238,7 +1238,7 @@ function calcKnee(h,camDeg=0){
   });
   if(!R.length&&!L.length)return null;
   const mr=R.length?Math.max(...R):0,ml=L.length?Math.max(...L):0,peak=Math.max(mr,ml);
-  const score=peak>=50?100:peak>=35?60+(peak-35)/15*40:cl((peak/35)*60,0,100);
+  const score=peak>=40?100:peak>=28?60+(peak-28)/12*40:cl((peak/28)*60,0,100);
   return{mr,ml,peak,score};
 }
 function calcArm(h,camDeg=0){
@@ -1254,17 +1254,17 @@ function calcArm(h,camDeg=0){
   return{ar,al,avg,diff,score};
 }
 function calcSym(h){const D=[];h.forEach(({lm})=>{const checks=[];if(ok(lm,12)&&ok(lm,24)&&ok(lm,26)&&ok(lm,11)&&ok(lm,23)&&ok(lm,25))checks.push(Math.abs(ang(lm[12],lm[24],lm[26])-ang(lm[11],lm[23],lm[25])));if(ok(lm,24)&&ok(lm,26)&&ok(lm,28)&&ok(lm,23)&&ok(lm,25)&&ok(lm,27))checks.push(Math.abs(ang(lm[24],lm[26],lm[28])-ang(lm[23],lm[25],lm[27])));if(checks.length)D.push(mn(checks));});if(!D.length)return null;const avg=mn(D),score=cl(100-avg*2,0,100);return{avg,score};}
-function calcVert(h){const Y=[],Hh=[];h.forEach(({lm})=>{if(ok(lm,23)&&ok(lm,24))Y.push((lm[23].y+lm[24].y)/2);if(ok(lm,0)&&ok(lm,27)&&ok(lm,28))Hh.push(Math.abs((lm[27].y+lm[28].y)/2-lm[0].y));});if(Y.length<8)return null;const dev=sd(Y),avgH=Hh.length?mn(Hh):1,pct=(dev/avgH)*100;const score=pct<=2?100:pct<=4?100-(pct-2)*15:cl(70-(pct-4)*12,0,100);return{pct,score};}
+function calcVert(h){const Y=[],Hh=[];h.forEach(({lm})=>{if(ok(lm,23)&&ok(lm,24))Y.push((lm[23].y+lm[24].y)/2);if(ok(lm,0)&&ok(lm,27)&&ok(lm,28))Hh.push(Math.abs((lm[27].y+lm[28].y)/2-lm[0].y));});if(Y.length<8)return null;const dev=sd(Y),avgH=Hh.length?mn(Hh):1,pct=(dev/avgH)*100;const score=pct<=3?100:pct<=6?100-(pct-3)*10:cl(70-(pct-6)*12,0,100);return{pct,score};}
 function calcCad(h){if(h.length<24)return null;const vals=[],times=[];h.forEach(({t,lm})=>{if(ok(lm,23)&&ok(lm,25)){vals.push(Math.abs(Math.atan2(lm[25].x-lm[23].x,lm[23].y-lm[25].y)*180/Math.PI));times.push(t);}});if(vals.length<16)return null;const m=mn(vals);let cross=0;for(let i=1;i<vals.length;i++)if((vals[i-1]-m)*(vals[i]-m)<0)cross++;const span=(times[times.length-1]-times[0])/1000;if(span<1)return null;const spm=Math.round((cross/2/span)*60);if(spm<60||spm>240)return null;const score=spm>=170&&spm<=190?100:spm>=160&&spm<170?60+(spm-160)*4:spm>190&&spm<=200?100-(spm-190)*4:cl(100-Math.abs(spm-180)*1.2,0,100);return{spm,score};}
 
 // ── Render results ─────────────────────────────────────────
 function renderCards(m){
   const cards=[
     {name:'体幹前傾角',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
-    {name:'膝の引き上げ',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想≥45°',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=50?'十分':m.knee.peak>=35?'やや浅い':'浅い'):'--'},
+    {name:'膝の引き上げ',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想40°+',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
     {name:'腕振り角度',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
     {name:'左右対称性',val:m.sym?`${Math.round(m.sym.score)}%`:'--',unit:'左右の差',sc:m.sym?.score??null,lbl:m.sym?(m.sym.avg<8?'対称':'非対称あり'):'--'},
-    {name:'上下動',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <3%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=2?'安定':m.vert.pct<=4?'やや多い':'多すぎ'):'--'},
+    {name:'上下動',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
     {name:'ケイデンス',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
   ];
   document.getElementById('metric-grid').innerHTML=cards.map(c=>{const sc=c.sc??0,clr=c.sc!==null?col(sc):'#404060';return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div><div class="mc-lbl">${c.lbl}</div></div>`;}).join('');
