@@ -276,6 +276,39 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 .cmp-tips{background:#0a0a20;border-radius:10px;padding:12px;font-size:.78rem}
 .cmp-tips h4{color:#c0c0e0;margin-bottom:8px;font-size:.8rem}
 .cmp-tip-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;color:#a0a0c0;line-height:1.5}
+/* ── Help Button ── */
+.help-btn{width:28px;height:28px;border-radius:50%;border:1px solid #2a2a5a;background:#0a0a20;color:#6080a0;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.help-btn:hover{border-color:#00e5ff55;color:#00e5ff;background:#00e5ff0a}
+/* ── Help Modal ── */
+.help-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;overflow-y:auto;padding:16px 12px}
+.help-modal.show{display:flex;flex-direction:column;align-items:center}
+.help-box{background:#0e0e26;border:1px solid #2a2a5a;border-radius:16px;width:100%;max-width:560px}
+.help-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:#14143a;border-bottom:1px solid #2a2a5a;border-radius:16px 16px 0 0}
+.help-hd h3{font-size:1rem;background:linear-gradient(90deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+.help-close{background:transparent;border:none;color:#8080b0;font-size:1.3rem;cursor:pointer;padding:2px 6px}
+.help-body{padding:18px}
+.help-section{margin-bottom:20px}
+.help-section:last-child{margin-bottom:0}
+.help-section-title{font-size:.78rem;font-weight:700;color:#00e5ff;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.help-steps{display:flex;flex-direction:column;gap:8px}
+.help-step{display:flex;gap:12px;align-items:flex-start}
+.help-step-num{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#00b8d4,#7c3aed);color:#fff;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.help-step-body{flex:1}
+.help-step-title{font-size:.8rem;font-weight:600;color:#c0c0e0;margin-bottom:2px}
+.help-step-desc{font-size:.72rem;color:#6070a0;line-height:1.5}
+.help-tips{display:flex;flex-direction:column;gap:6px}
+.help-tip{display:flex;gap:8px;align-items:flex-start;font-size:.74rem;color:#8090b0;line-height:1.5}
+.help-tip-icon{flex-shrink:0;font-size:.85rem}
+.help-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.help-metric{background:#0a0a1f;border:1px solid #1a1a3a;border-radius:8px;padding:8px 10px}
+.help-metric-name{font-size:.72rem;font-weight:700;color:#a0b0d0;margin-bottom:3px}
+.help-metric-desc{font-size:.66rem;color:#506080;line-height:1.4}
+.help-faq{display:flex;flex-direction:column;gap:8px}
+.help-faq-item{background:#0a0a1f;border:1px solid #1a1a3a;border-radius:8px;overflow:hidden}
+.help-faq-q{padding:9px 12px;font-size:.75rem;font-weight:600;color:#c0c0e0;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.help-faq-q:hover{background:#0d0d24}
+.help-faq-a{padding:0 12px 10px;font-size:.71rem;color:#6070a0;line-height:1.55;display:none}
+.help-faq-a.open{display:block}
 /* ── Auth Bar ── */
 .auth-bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:7px 14px;background:#080818;border-bottom:1px solid #1a1a3a;font-size:.8rem;flex-wrap:wrap}
 .auth-user{display:flex;align-items:center;gap:8px;color:#c0c0e0}
@@ -345,6 +378,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
     <button class="auth-btn" onclick="fbSignOut()">ログアウト</button>
   </div>
   <button class="auth-btn login" id="auth-login-btn" onclick="signInGoogle()">Googleでログイン</button>
+  <button class="help-btn" onclick="showHelp()" title="使い方">?</button>
 </div>
 
 <div class="wrap">
@@ -647,6 +681,107 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 <div class="lov" id="loading">
   <div class="sp"></div>
   <div class="lt" id="lt">MediaPipe モデルを読み込み中...<br><small style="font-size:.72rem;color:#606080">初回のみ時間がかかります</small></div>
+</div>
+
+<!-- Help Modal -->
+<div class="help-modal" id="help-modal">
+  <div class="help-box">
+    <div class="help-hd">
+      <h3>RUNFORM 使い方ガイド</h3>
+      <button class="help-close" onclick="closeHelp()">✕</button>
+    </div>
+    <div class="help-body">
+
+      <!-- 使い方ステップ -->
+      <div class="help-section">
+        <div class="help-section-title">📱 基本の使い方</div>
+        <div class="help-steps">
+          <div class="help-step">
+            <div class="help-step-num">1</div>
+            <div class="help-step-body">
+              <div class="help-step-title">動画を準備する</div>
+              <div class="help-step-desc">走っている横姿の動画をスマホで撮影。または既存の動画ファイルを選択してください。カメラタブからリアルタイム録画も可能です。</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="help-step-num">2</div>
+            <div class="help-step-body">
+              <div class="help-step-title">動画Bに読み込む</div>
+              <div class="help-step-desc">「動画B（練習）」パネルにファイルをセット。再生すると自動的にAI骨格検出が始まります。</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="help-step-num">3</div>
+            <div class="help-step-body">
+              <div class="help-step-title">3秒以上再生して分析</div>
+              <div class="help-step-desc">再生中にデータを収集します。走っている区間を3秒以上含めてください。「分析する」ボタンで結果が表示されます。</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="help-step-num">4</div>
+            <div class="help-step-body">
+              <div class="help-step-title">結果を確認・保存</div>
+              <div class="help-step-desc">7項目のスコアとアドバイスが表示されます。Googleログインで記録を保存し、履歴で成長を確認できます。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 撮影のコツ -->
+      <div class="help-section">
+        <div class="help-section-title">📷 撮影のコツ</div>
+        <div class="help-tips">
+          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>横から撮る</strong> — カメラは走る方向に対して真横（90°）に置く。斜め前後から撮ると精度が下がります。</span></div>
+          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>全身が映るよう離れる</strong> — 頭からつま先まで画角に入るよう5〜7m離れて撮影。</span></div>
+          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>明るい場所で</strong> — 逆光・暗い室内は検出精度が落ちます。屋外の昼間が最適。</span></div>
+          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>ゆっくりでも可</strong> — ジョギングペースで十分。スローモーション動画も使えます。</span></div>
+          <div class="help-tip"><span class="help-tip-icon">⚠️</span><span><strong>複数人が映ると誤検出</strong> — できるだけ1人で走っている映像を使ってください。</span></div>
+        </div>
+      </div>
+
+      <!-- 指標の説明 -->
+      <div class="help-section">
+        <div class="help-section-title">📊 7つの評価指標</div>
+        <div class="help-metrics">
+          <div class="help-metric"><div class="help-metric-name">体幹前傾角</div><div class="help-metric-desc">理想は5〜15°の前傾。重力を推進力に変換し省エネな走りの土台になります。</div></div>
+          <div class="help-metric"><div class="help-metric-name">膝の引き上げ</div><div class="help-metric-desc">理想は40°以上。引き上げが深いほど歩幅が広がりスピードが出やすくなります。</div></div>
+          <div class="help-metric"><div class="help-metric-name">腕振り角度</div><div class="help-metric-desc">理想は肘90°。上半身の回転を抑え走りのリズムとバランスを安定させます。</div></div>
+          <div class="help-metric"><div class="help-metric-name">着地位置</div><div class="help-metric-desc">足が重心より前すぎると膝への衝撃が増大。重心直下への着地が理想です。</div></div>
+          <div class="help-metric"><div class="help-metric-name">着地時膝屈曲</div><div class="help-metric-desc">着地瞬間の膝の曲がり（理想15〜35°）。曲げることで衝撃を吸収します。</div></div>
+          <div class="help-metric"><div class="help-metric-name">上下動</div><div class="help-metric-desc">縦方向のエネルギーロス。小さいほど前進効率が高くスタミナ節約になります。</div></div>
+          <div class="help-metric"><div class="help-metric-name">ケイデンス</div><div class="help-metric-desc">1分間の歩数。理想は170〜190spm。高いほど着地衝撃が分散し膝への負担が減ります。</div></div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="help-section">
+        <div class="help-section-title">❓ よくある質問</div>
+        <div class="help-faq">
+          <div class="help-faq-item">
+            <div class="help-faq-q" onclick="toggleFaq(this)"><span>骨格が正しく検出されないのですが</span><span>＋</span></div>
+            <div class="help-faq-a">照明が暗い・逆光・カメラが近すぎる場合に検出精度が落ちます。明るい屋外で全身が映るよう5m以上離れて撮影してください。また、タイツや体にフィットした服装が認識されやすいです。</div>
+          </div>
+          <div class="help-faq-item">
+            <div class="help-faq-q" onclick="toggleFaq(this)"><span>動画Aとの比較はどうやって使うの？</span><span>＋</span></div>
+            <div class="help-faq-a">上部の「＋ お手本動画（A）を表示」からプロ選手や理想のフォームの動画を読み込み分析します。動画B（あなた）も分析が終わると「フォームを比較する」ボタンが表示され、2つのレーダーチャートとスコア差を確認できます。</div>
+          </div>
+          <div class="help-faq-item">
+            <div class="help-faq-q" onclick="toggleFaq(this)"><span>分析結果はどこに保存されますか？</span><span>＋</span></div>
+            <div class="help-faq-a">Googleログイン後に「💾 記録を保存」ボタンが表示されます。保存したデータはサーバー（Firebase）に安全に保管され、「📊 履歴」からいつでも確認できます。</div>
+          </div>
+          <div class="help-faq-item">
+            <div class="help-faq-q" onclick="toggleFaq(this)"><span>スマホのカメラでもリアルタイム分析できますか？</span><span>＋</span></div>
+            <div class="help-faq-a">できます。「カメラ」タブを選択してカメラを起動し、「⏺ 録画・分析開始」で走りながら分析が可能です。ただし端末の処理能力によって精度が変わる場合があります。</div>
+          </div>
+          <div class="help-faq-item">
+            <div class="help-faq-q" onclick="toggleFaq(this)"><span>無料で全機能使えますか？</span><span>＋</span></div>
+            <div class="help-faq-a">現在はベータ版のため全機能を無料で利用できます。今後、課金プランを導入予定ですが、ベータ期間中にご利用いただいた方への特別優遇を検討しています。</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <!-- Compare Modal -->
@@ -1848,6 +1983,17 @@ document.addEventListener('touchend',rsUp);
   });
 });
 
+// ── Help ───────────────────────────────────────────────────
+function showHelp(){document.getElementById('help-modal').classList.add('show');}
+function closeHelp(){document.getElementById('help-modal').classList.remove('show');}
+function toggleFaq(el){
+  const a=el.nextElementSibling;
+  const isOpen=a.classList.contains('open');
+  document.querySelectorAll('.help-faq-a').forEach(x=>x.classList.remove('open'));
+  document.querySelectorAll('.help-faq-q span:last-child').forEach(x=>x.textContent='＋');
+  if(!isOpen){a.classList.add('open');el.querySelector('span:last-child').textContent='－';}
+}
+document.getElementById('help-modal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeHelp();});
 // ── Comparison ─────────────────────────────────────────────
 const analysisResults={left:null,right:null};
 const CMP_KEYS=[
