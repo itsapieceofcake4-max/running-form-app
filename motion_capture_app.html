@@ -294,6 +294,8 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 /* ── Help Button ── */
 .help-btn{width:28px;height:28px;border-radius:50%;border:1px solid #2a2a5a;background:#0a0a20;color:#6080a0;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .help-btn:hover{border-color:#00e5ff55;color:#00e5ff;background:#00e5ff0a}
+.lang-btn{padding:4px 10px;border-radius:6px;border:1px solid #2a2a5a;background:transparent;color:#8080b0;font-size:.72rem;font-weight:700;cursor:pointer;letter-spacing:.06em;transition:all .2s}
+.lang-btn:hover{border-color:#00e5ff55;color:#00e5ff}
 /* ── Feedback Button ── */
 .feedback-btn{position:fixed;bottom:20px;right:20px;z-index:2000;background:linear-gradient(135deg,#1a1a3e,#0d0d2b);border:1px solid #ff408155;border-radius:24px;color:#ff8fb0;font-size:.78rem;font-weight:600;padding:9px 16px;cursor:pointer;transition:all .25s;box-shadow:0 2px 12px rgba(255,64,129,.15);letter-spacing:.03em;text-decoration:none;display:flex;align-items:center;gap:6px}
 .feedback-btn:hover{background:linear-gradient(135deg,#ff408122,#1a1a3e);border-color:#ff4081aa;color:#ff4081;box-shadow:0 4px 20px rgba(255,64,129,.3);transform:translateY(-2px)}
@@ -440,20 +442,21 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 <body>
 <header>
   <div class="header-inner">
-    <div class="header-badge">AI Powered</div>
+    <div class="header-badge" data-i18n="header.badge">AI Powered</div>
     <h1>RUNFORM</h1>
-    <p class="header-tagline">あなたの走りを、データで磨く。</p>
+    <p class="header-tagline" data-i18n="header.tagline">あなたの走りを、データで磨く。</p>
   </div>
 </header>
 <div class="auth-bar" id="auth-bar">
-  <span class="auth-hint" id="auth-hint">ログインすると分析結果を保存できます</span>
+  <span class="auth-hint" id="auth-hint" data-i18n="auth.hint">ログインすると分析結果を保存できます</span>
   <div class="auth-user" id="auth-user" style="display:none">
     <img class="auth-avatar" id="auth-avatar" src="" alt="">
     <span class="auth-name" id="auth-name"></span>
-    <button class="hist-open-btn" onclick="showHistory()">📊 履歴</button>
-    <button class="auth-btn" onclick="fbSignOut()">ログアウト</button>
+    <button class="hist-open-btn" id="auth-hist-btn" onclick="showHistory()" data-i18n="auth.history">📊 履歴</button>
+    <button class="auth-btn" id="auth-logout-btn" onclick="fbSignOut()" data-i18n="auth.logout">ログアウト</button>
   </div>
-  <button class="auth-btn login" id="auth-login-btn" onclick="signInGoogle()">Googleでログイン</button>
+  <button class="auth-btn login" id="auth-login-btn" onclick="signInGoogle()" data-i18n="auth.login">Googleでログイン</button>
+  <button class="lang-btn" id="lang-btn" onclick="toggleLang()" data-i18n="lang.toggle">EN</button>
   <button class="help-btn" onclick="showHelp()" title="使い方">?</button>
 </div>
 
@@ -473,10 +476,10 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 
   <!-- Layout Selector -->
   <div class="layout-sel">
-    <span class="layout-sel-lbl">レイアウト:</span>
-    <button class="layout-btn active" id="ar-auto" onclick="setLayout('auto')">🔄 自動</button>
-    <button class="layout-btn" id="ar-port" onclick="setLayout('portrait')">📱 縦長</button>
-    <button class="layout-btn" id="ar-land" onclick="setLayout('landscape')">🖥 横長</button>
+    <span class="layout-sel-lbl" data-i18n="layout.label">レイアウト:</span>
+    <button class="layout-btn active" id="ar-auto" onclick="setLayout('auto')" data-i18n="layout.auto">🔄 自動</button>
+    <button class="layout-btn" id="ar-port" onclick="setLayout('portrait')" data-i18n="layout.portrait">📱 縦長</button>
+    <button class="layout-btn" id="ar-land" onclick="setLayout('landscape')" data-i18n="layout.landscape">🖥 横長</button>
   </div>
 
   <!-- Panels -->
@@ -554,29 +557,29 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
     </div>
 
     <div class="panel">
-      <div class="ph"><h2>動画 A（自分）</h2><span class="badge p">自分</span></div>
+      <div class="ph"><h2 data-i18n="panel.right.title">動画 A（自分）</h2><span class="badge p" data-i18n="panel.right.badge">自分</span></div>
       <div class="inp">
         <div class="tabs">
-          <button class="tb active" onclick="switchTab('right','file',this)">📁 ファイル</button>
-          <button class="tb" onclick="switchTab('right','camera',this)">📸 カメラ</button>
+          <button class="tb active" onclick="switchTab('right','file',this)" data-i18n="tab.file">📁 ファイル</button>
+          <button class="tb" onclick="switchTab('right','camera',this)" data-i18n="tab.camera">📸 カメラ</button>
         </div>
         <div class="tp active" id="right-tab-file">
-          <label class="fl" for="rfi">📁 動画ファイルを選択（再生で自動分析）</label>
+          <label class="fl" for="rfi" data-i18n="file.label.right">📁 動画ファイルを選択（再生で自動分析）</label>
           <input type="file" id="rfi" accept="video/*" onchange="loadVideoFile('right',this)">
         </div>
         <div class="tp" id="right-tab-camera">
           <div class="cam-wrap">
             <div class="cam-row">
               <select class="cam-sel" id="right-cam-facing">
-                <option value="environment">背面カメラ</option>
-                <option value="user">前面カメラ</option>
+                <option value="environment" data-i18n="cam.back">背面カメラ</option>
+                <option value="user" data-i18n="cam.front">前面カメラ</option>
               </select>
-              <button class="btn btn-p" id="right-cam-btn" onclick="toggleCameraPreview('right')">▶ 開始</button>
+              <button class="btn btn-p" id="right-cam-btn" onclick="toggleCameraPreview('right')" data-i18n="cam.start.right">▶ 開始</button>
             </div>
             <div class="cam-rec-row" id="right-rec-row">
               <div class="rec-dot" id="right-rec-dot" style="display:none"></div>
               <span class="rec-timer" id="right-rec-timer">00:00</span>
-              <button class="btn btn-g" id="right-rec-btn" onclick="toggleRecording('right')">⏺ 録画・分析開始</button>
+              <button class="btn btn-g" id="right-rec-btn" onclick="toggleRecording('right')" data-i18n="rec.btn.right">⏺ 録画・分析開始</button>
             </div>
           </div>
         </div>
@@ -589,11 +592,11 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
               <path d="M16 24V8M16 8L8 16M16 8L24 16" stroke="rgba(255,255,255,0.85)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <div class="upload-title">走り動画をドロップ、または<br>クリックして選択</div>
-          <div class="upload-fmt">対応形式: MP4 / MOV / AVI（最大300MB）</div>
-          <label class="upload-btn" for="rfi" onclick="event.stopPropagation()">動画を選択する</label>
+          <div class="upload-title" data-i18n-html="upload.title">走り動画をドロップ、または<br>クリックして選択</div>
+          <div class="upload-fmt" data-i18n="upload.fmt">対応形式: MP4 / MOV / AVI（最大300MB）</div>
+          <label class="upload-btn" for="rfi" onclick="event.stopPropagation()" data-i18n="upload.btn">動画を選択する</label>
         </div>
-        <div class="upload-hint">スマートフォンで撮影した動画もそのまま使用できます</div>
+        <div class="upload-hint" data-i18n="upload.hint">スマートフォンで撮影した動画もそのまま使用できます</div>
       </div>
         <video id="right-video" loop playsinline></video>
         <canvas id="right-canvas"></canvas>
@@ -615,49 +618,49 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
           <span id="right-rs-tdur">--:--</span>
         </div>
       </div>
-      <div class="statusb" id="right-sb">動画を読み込んでください</div>
+      <div class="statusb" id="right-sb" data-i18n="sb.load">動画を読み込んでください</div>
     </div>
 
   </div>
 
   <!-- Controls -->
   <div class="ctrl">
-    <span class="ctrl-lbl">動画再生</span>
-    <button class="bc bc-preview" id="btn-preview" onclick="previewPlay()">▶ プレビュー</button>
-    <button class="bc" id="btn-play" onclick="syncPlay()">🔍 再生・分析</button>
-    <button class="bc" onclick="pauseAll()">⏸ 一時停止</button>
-    <button class="bc" onclick="resetAll()">⏮ リセット</button>
+    <span class="ctrl-lbl" data-i18n="ctrl.label">動画再生</span>
+    <button class="bc bc-preview" id="btn-preview" onclick="previewPlay()" data-i18n="btn.preview">▶ プレビュー</button>
+    <button class="bc" id="btn-play" onclick="syncPlay()" data-i18n="btn.play">🔍 再生・分析</button>
+    <button class="bc" id="btn-pause" onclick="pauseAll()" data-i18n="btn.pause">⏸ 一時停止</button>
+    <button class="bc" id="btn-reset" onclick="resetAll()" data-i18n="btn.reset">⏮ リセット</button>
     <div class="toggles">
-      <div class="tgi"><label class="sw"><input type="checkbox" checked onchange="S.showSkeleton=this.checked"><span class="sws"></span></label>骨格</div>
-      <div class="tgi"><label class="sw"><input type="checkbox" checked onchange="S.showVideo=this.checked"><span class="sws"></span></label>映像</div>
+      <div class="tgi"><label class="sw"><input type="checkbox" checked onchange="S.showSkeleton=this.checked"><span class="sws"></span></label><span data-i18n="toggle.skeleton">骨格</span></div>
+      <div class="tgi"><label class="sw"><input type="checkbox" checked onchange="S.showVideo=this.checked"><span class="sws"></span></label><span data-i18n="toggle.video">映像</span></div>
     </div>
   </div>
 
   <!-- Camera Visual Picker -->
   <div class="cam-visual-picker">
-    <div class="cvp-head"><h3>📐 撮影アングル</h3><span>撮影環境に近い絵を選んでください</span></div>
-    <div class="cvp-group">水平方向（カメラの向き）</div>
+    <div class="cvp-head"><h3 data-i18n="cam.angle.title">📐 撮影アングル</h3><span data-i18n="cam.angle.hint">撮影環境に近い絵を選んでください</span></div>
+    <div class="cvp-group" data-i18n="cam.angle.horiz">水平方向（カメラの向き）</div>
     <div class="cvp-row" id="cvp-horiz"></div>
-    <div class="cvp-group">カメラの高さ</div>
+    <div class="cvp-group" data-i18n="cam.angle.vert">カメラの高さ</div>
     <div class="cvp-row" id="cvp-vert"></div>
     <div class="cvp-bottom">
       <div class="cvp-info" id="cvp-info">真横・アイレベル — <b>補正なし</b>（理想的な撮影角度）</div>
-      <button class="bc" onclick="autoDetectCamAngle()">🔍 自動検出</button>
+      <button class="bc" onclick="autoDetectCamAngle()" data-i18n="cam.auto">🔍 自動検出</button>
     </div>
   </div>
 
   <!-- Goal -->
   <div class="goal-bar">
-    <h3>🎯 目標設定</h3>
+    <h3 data-i18n="goal.title">🎯 目標設定</h3>
     <div class="goal-inputs">
-      <div class="gf"><label>距離</label><input class="gnum" type="number" id="goal-dist" value="3.5" step="0.1" min="0.1" inputmode="decimal" oninput="updateGoal()"><span>km</span></div>
-      <div class="gf"><label>目標タイム</label><input class="gnum" type="number" id="goal-min" value="15" min="0" inputmode="numeric" oninput="updateGoal()"><span>分</span><input class="gnum" type="number" id="goal-sec" value="0" min="0" max="59" inputmode="numeric" oninput="updateGoal()"><span>秒</span></div>
+      <div class="gf"><label data-i18n="goal.dist.label">距離</label><input class="gnum" type="number" id="goal-dist" value="3.5" step="0.1" min="0.1" inputmode="decimal" oninput="updateGoal()"><span>km</span></div>
+      <div class="gf"><label data-i18n="goal.time.label">目標タイム</label><input class="gnum" type="number" id="goal-min" value="15" min="0" inputmode="numeric" oninput="updateGoal()"><span data-i18n="goal.min">分</span><input class="gnum" type="number" id="goal-sec" value="0" min="0" max="59" inputmode="numeric" oninput="updateGoal()"><span data-i18n="goal.sec">秒</span></div>
     </div>
     <div class="goal-result">
-      <div class="gr-item"><div class="gr-label">距離</div><div class="gr-val" id="gr-dist">--</div></div>
-      <div class="gr-item"><div class="gr-label">ペース /km</div><div class="gr-val" id="gr-pace">--</div></div>
-      <div class="gr-item"><div class="gr-label">速度</div><div class="gr-val" id="gr-speed">--</div></div>
-      <div class="gr-item"><div class="gr-label">種目</div><div class="rtbadge rt-middle" id="gr-type">--</div></div>
+      <div class="gr-item"><div class="gr-label" data-i18n="goal.res.dist">距離</div><div class="gr-val" id="gr-dist">--</div></div>
+      <div class="gr-item"><div class="gr-label" data-i18n="goal.res.pace">ペース /km</div><div class="gr-val" id="gr-pace">--</div></div>
+      <div class="gr-item"><div class="gr-label" data-i18n="goal.res.speed">速度</div><div class="gr-val" id="gr-speed">--</div></div>
+      <div class="gr-item"><div class="gr-label" data-i18n="goal.res.type">種目</div><div class="rtbadge rt-middle" id="gr-type">--</div></div>
     </div>
     <div class="goal-hint" id="goal-hint"></div>
   </div>
@@ -665,7 +668,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
   <!-- Analysis -->
   <div class="asec">
     <div class="mtabs">
-      <button class="mt active" id="tab-run" onclick="setMode('running')">🏃 ランニング解析</button>
+      <button class="mt active" id="tab-run" onclick="setMode('running')" data-i18n="tab.run">🏃 ランニング解析</button>
       <!-- 将来機能 v2.0予定: 動画比較タブ (現バージョン非表示) -->
       <!-- <button class="mt" id="tab-cmp" onclick="setMode('compare')">🔄 動画比較（リアルタイム）</button> -->
     </div>
@@ -681,7 +684,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
       <div id="state-waiting" class="astate">
         <div class="astate-waiting">
           <div class="big-icon">🎬</div>
-          <p>動画ファイルを読み込んで<strong>「▶ 再生・分析」</strong>を押すか<br>カメラタブから<strong>「⏺ 録画・分析開始」</strong>を押してください</p>
+          <p data-i18n-html="state.waiting">動画ファイルを読み込んで<strong>「▶ 再生・分析」</strong>を押すか<br>カメラタブから<strong>「⏺ 録画・分析開始」</strong>を押してください</p>
         </div>
       </div>
 
@@ -690,8 +693,8 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
         <div class="collect-header">
           <div class="collect-spinner"></div>
           <div>
-            <div class="collect-title" id="collect-title">フォームデータを収集中...</div>
-            <div class="collect-sub" id="collect-sub">動画が終わると自動で分析が始まります</div>
+            <div class="collect-title" id="collect-title" data-i18n="collect.title">フォームデータを収集中...</div>
+            <div class="collect-sub" id="collect-sub" data-i18n="collect.sub">動画が終わると自動で分析が始まります</div>
           </div>
         </div>
         <div class="collect-progress-wrap">
@@ -700,7 +703,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
             <div class="collect-min-mark" id="collect-min-mark" style="left:30%"></div>
           </div>
           <div class="collect-stats">
-            <div>収集時間: <span id="collect-frames">0.0</span>秒</div>
+            <div><span data-i18n="collect.time.label">収集時間:</span> <span id="collect-frames">0.0</span><span data-i18n="collect.sec">秒</span></div>
             <div id="collect-time-stat"></div>
           </div>
         </div>
@@ -715,11 +718,11 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
           <div class="done-header-left">
             <span class="done-check">✅</span>
             <div>
-              <div class="done-title">分析完了</div>
+              <div class="done-title" data-i18n="done.title">分析完了</div>
               <div class="done-frames" id="done-frames">0フレームを分析</div>
             </div>
           </div>
-          <button class="done-retry" onclick="resetAnalysis()">🔄 もう一度</button>
+          <button class="done-retry" onclick="resetAnalysis()" data-i18n="done.retry">🔄 もう一度</button>
         </div>
         <div class="radar-layout">
           <div class="radar-wrap">
@@ -738,12 +741,12 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
           </div>
         </div>
         <div class="save-row" id="save-row" style="display:none">
-          <button class="save-btn" id="save-btn" onclick="saveAnalysis()">💾 記録を保存</button>
-          <button class="share-btn" id="share-btn" onclick="shareResult()">📤 結果をシェア</button>
-          <button class="hist-open-btn" onclick="showHistory()">📊 履歴を見る</button>
+          <button class="save-btn" id="save-btn" onclick="saveAnalysis()" data-i18n="btn.save">💾 記録を保存</button>
+          <button class="share-btn" id="share-btn" onclick="shareResult()" data-i18n="btn.share">📤 結果をシェア</button>
+          <button class="hist-open-btn" id="hist-view-btn" onclick="showHistory()" data-i18n="btn.history.view">📊 履歴を見る</button>
         </div>
         <div class="advsec">
-          <h3>各指標の詳細アドバイス</h3>
+          <h3 data-i18n="adv.section.title">各指標の詳細アドバイス</h3>
           <div class="adv-cards" id="adv-cards"></div>
           <div class="advlist" id="run-advice"></div>
         </div>
@@ -946,6 +949,190 @@ const RUN_TYPES={
   middle:{label:'中距離系',cls:'rt-middle',desc:'1〜8km レースペース',trunk:{ideal:[7,15],low:'中距離では7〜15°の前傾が推進力と持続力のバランスを生みます',high:'前傾が強すぎます。腰への負担が増えペースを維持しにくくなります'},knee:{min:45,low:'膝の引き上げが浅いです（目標45°以上）。スピードを出すには脚の回転を大きくすることが重要です'},arm:{ideal:90,msg:'肘を90°に固定し、体の軸に沿って前後にコンパクトに振ることでリズムを作ります'},cad:{ideal:182,low:'ケイデンスを上げましょう（中距離の目標は178〜188 spm）',high:'ケイデンスがやや高め。歩幅を少し広げてバランスを取りましょう'},vert:{limit:3,msg:'地面反力を前進に変換することが速さの鍵。「後ろ下方向」に押し出すイメージで'},hint:'中距離では速度と持久力のバランスが重要。序盤に飛ばしすぎず、後半でも同じフォームを維持できる余裕を残しながら走りましょう。'},
   long:{label:'長距離系',cls:'rt-long',desc:'8km超 エンデュランス',trunk:{ideal:[4,10],low:'長距離では軽い前傾（4〜10°）が省エネに繋がります',high:'前傾が強すぎます。長距離では腰痛の原因になります'},knee:{min:35,low:'膝の引き上げが浅すぎます。最低35°は維持しましょう'},arm:{ideal:95,msg:'リラックスした腕振りが重要。肘90〜100°を目安に、肩の力を抜いて振りましょう'},cad:{ideal:178,low:'ケイデンスが低いです（長距離の目標は170〜182 spm）',high:'ケイデンスがやや高め。長距離では無理せず自然なリズムを保ちましょう'},vert:{limit:2,msg:'長距離では上下動を最小化することがエネルギー節約の要。地面を蹴らず「乗り込む」イメージで走りましょう'},hint:'長距離ではエネルギー効率と怪我予防が最優先。フォームが崩れやすい後半こそ正しいフォームを意識することが完走と記録短縮の鍵です。'}
 };
+
+// ── i18n ────────────────────────────────────────────────────
+window.LANG=localStorage.getItem('runform_lang')||'ja';
+const I18N={
+  ja:{
+    'header.tagline':'あなたの走りを、データで磨く。',
+    'header.badge':'AI Powered',
+    'auth.hint':'ログインすると分析結果を保存できます',
+    'auth.login':'Googleでログイン',
+    'auth.logout':'ログアウト',
+    'auth.history':'📊 履歴',
+    'layout.label':'レイアウト:',
+    'layout.auto':'🔄 自動',
+    'layout.portrait':'📱 縦長',
+    'layout.landscape':'🖥 横長',
+    'panel.right.title':'動画 A（自分）',
+    'panel.right.badge':'自分',
+    'tab.file':'📁 ファイル',
+    'tab.camera':'📸 カメラ',
+    'file.label.right':'📁 動画ファイルを選択（再生で自動分析）',
+    'upload.title':'走り動画をドロップ、または<br>クリックして選択',
+    'upload.fmt':'対応形式: MP4 / MOV / AVI（最大300MB）',
+    'upload.btn':'動画を選択する',
+    'upload.hint':'スマートフォンで撮影した動画もそのまま使用できます',
+    'cam.back':'背面カメラ',
+    'cam.front':'前面カメラ',
+    'cam.start.right':'▶ 開始',
+    'rec.btn.right':'⏺ 録画・分析開始',
+    'ctrl.label':'動画再生',
+    'btn.preview':'▶ プレビュー',
+    'btn.play':'🔍 再生・分析',
+    'btn.pause':'⏸ 一時停止',
+    'btn.reset':'⏮ リセット',
+    'toggle.skeleton':'骨格',
+    'toggle.video':'映像',
+    'cam.angle.title':'📐 撮影アングル',
+    'cam.angle.hint':'撮影環境に近い絵を選んでください',
+    'cam.angle.horiz':'水平方向（カメラの向き）',
+    'cam.angle.vert':'カメラの高さ',
+    'cam.auto':'🔍 自動検出',
+    'goal.title':'🎯 目標設定',
+    'goal.dist.label':'距離',
+    'goal.time.label':'目標タイム',
+    'goal.min':'分',
+    'goal.sec':'秒',
+    'goal.res.dist':'距離',
+    'goal.res.pace':'ペース /km',
+    'goal.res.speed':'速度',
+    'goal.res.type':'種目',
+    'tab.run':'🏃 ランニング解析',
+    'state.waiting':'動画ファイルを読み込んで<strong>「🔍 再生・分析」</strong>を押すか<br>カメラタブから<strong>「⏺ 録画・分析開始」</strong>を押してください',
+    'collect.title':'フォームデータを収集中...',
+    'collect.sub':'動画が終わると自動で分析が始まります',
+    'collect.time.label':'収集時間:',
+    'collect.sec':'秒',
+    'done.title':'分析完了',
+    'done.retry':'🔄 もう一度',
+    'btn.save':'💾 記録を保存',
+    'btn.saved':'✅ 保存済み',
+    'btn.share':'📤 結果をシェア',
+    'btn.share.copied':'✅ コピーしました！',
+    'btn.history.view':'📊 履歴を見る',
+    'adv.section.title':'各指標の詳細アドバイス',
+    'metric.trunk':'体幹前傾角',
+    'metric.knee':'膝の引き上げ',
+    'metric.arm':'腕振り角度',
+    'metric.overstride':'着地位置',
+    'metric.landingKnee':'着地時膝屈曲',
+    'metric.vert':'上下動',
+    'metric.cad':'ケイデンス',
+    'metric.trunk.unit':'理想5〜15°',
+    'metric.knee.unit':'理想40°+',
+    'metric.arm.unit':'理想90°',
+    'metric.overstride.unit':'重心下着地',
+    'metric.landingKnee.unit':'理想15〜35°',
+    'metric.vert.unit':'体高比 <4%',
+    'metric.cad.unit':'理想170〜190',
+    'sb.load':'動画を読み込んでください',
+    'sb.ready':'読み込み完了',
+    'sb.done':'分析完了',
+    'lang.toggle':'EN',
+    'share.total':'総合スコア',
+    'share.pts':'点',
+    'share.msg':'AIがランニングフォームを7項目でスコア採点。あなたの走りも分析してみて！',
+    'share.title':'RUNFORMで走りを分析しました！',
+  },
+  en:{
+    'header.tagline':'Sharpen your running with data.',
+    'header.badge':'AI Powered',
+    'auth.hint':'Sign in to save your results',
+    'auth.login':'Sign in with Google',
+    'auth.logout':'Sign out',
+    'auth.history':'📊 History',
+    'layout.label':'Layout:',
+    'layout.auto':'🔄 Auto',
+    'layout.portrait':'📱 Portrait',
+    'layout.landscape':'🖥 Landscape',
+    'panel.right.title':'Video A (You)',
+    'panel.right.badge':'You',
+    'tab.file':'📁 File',
+    'tab.camera':'📸 Camera',
+    'file.label.right':'📁 Select video file (auto-analysis on play)',
+    'upload.title':'Drop running video here or<br>click to select',
+    'upload.fmt':'Supported: MP4 / MOV / AVI (max 300MB)',
+    'upload.btn':'Select Video',
+    'upload.hint':'Videos recorded on your smartphone work too',
+    'cam.back':'Rear Camera',
+    'cam.front':'Front Camera',
+    'cam.start.right':'▶ Start',
+    'rec.btn.right':'⏺ Record & Analyze',
+    'ctrl.label':'Playback',
+    'btn.preview':'▶ Preview',
+    'btn.play':'🔍 Play & Analyze',
+    'btn.pause':'⏸ Pause',
+    'btn.reset':'⏮ Reset',
+    'toggle.skeleton':'Skeleton',
+    'toggle.video':'Video',
+    'cam.angle.title':'📐 Camera Angle',
+    'cam.angle.hint':'Select the option closest to your setup',
+    'cam.angle.horiz':'Horizontal (camera direction)',
+    'cam.angle.vert':'Camera height',
+    'cam.auto':'🔍 Auto Detect',
+    'goal.title':'🎯 Goal Setting',
+    'goal.dist.label':'Distance',
+    'goal.time.label':'Target Time',
+    'goal.min':'min',
+    'goal.sec':'sec',
+    'goal.res.dist':'Distance',
+    'goal.res.pace':'Pace /km',
+    'goal.res.speed':'Speed',
+    'goal.res.type':'Type',
+    'tab.run':'🏃 Running Analysis',
+    'state.waiting':'Load a video and press <strong>"🔍 Play & Analyze"</strong><br>or press <strong>"⏺ Record & Analyze"</strong> from the camera tab',
+    'collect.title':'Collecting form data...',
+    'collect.sub':'Analysis starts automatically when video ends',
+    'collect.time.label':'Collected:',
+    'collect.sec':'s',
+    'done.title':'Analysis Complete',
+    'done.retry':'🔄 Retry',
+    'btn.save':'💾 Save Record',
+    'btn.saved':'✅ Saved',
+    'btn.share':'📤 Share Results',
+    'btn.share.copied':'✅ Copied!',
+    'btn.history.view':'📊 View History',
+    'adv.section.title':'Detailed Advice per Metric',
+    'metric.trunk':'Trunk Lean',
+    'metric.knee':'Knee Drive',
+    'metric.arm':'Arm Swing',
+    'metric.overstride':'Landing Position',
+    'metric.landingKnee':'Landing Knee Flex',
+    'metric.vert':'Vert. Oscillation',
+    'metric.cad':'Cadence',
+    'metric.trunk.unit':'Ideal 5–15°',
+    'metric.knee.unit':'Ideal 40°+',
+    'metric.arm.unit':'Ideal 90°',
+    'metric.overstride.unit':'Under CoM',
+    'metric.landingKnee.unit':'Ideal 15–35°',
+    'metric.vert.unit':'Height ratio <4%',
+    'metric.cad.unit':'Ideal 170–190',
+    'sb.load':'Please load a video',
+    'sb.ready':'Ready',
+    'sb.done':'Analysis complete',
+    'lang.toggle':'JA',
+    'share.total':'Total Score',
+    'share.pts':' pts',
+    'share.msg':'AI scores your running form across 7 metrics. Try it yourself!',
+    'share.title':'I analyzed my running form with RUNFORM!',
+  }
+};
+function t(k){return I18N[LANG]?.[k]??I18N.ja?.[k]??k;}
+function toggleLang(){setLang(LANG==='ja'?'en':'ja');}
+function setLang(lang){
+  window.LANG=lang;
+  localStorage.setItem('runform_lang',lang);
+  document.documentElement.lang=lang;
+  applyLang();
+  if(typeof lastAnalysis!=='undefined'&&lastAnalysis){renderCards(lastAnalysis);renderAdvice(lastAnalysis);}
+}
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>el.innerHTML=t(el.dataset.i18nHtml));
+  const lb=document.getElementById('lang-btn');if(lb)lb.textContent=t('lang.toggle');
+  document.querySelectorAll('option[data-i18n]').forEach(o=>o.textContent=t(o.dataset.i18n));
+}
 
 // ── State ──────────────────────────────────────────────────
 const S={
@@ -2009,51 +2196,52 @@ function metricSVG(key,m){
 
 // ── Per-card advice ────────────────────────────────────────
 function getCardAdvice(key,m){
+  const adv=(ja,en)=>LANG==='en'?en:ja;
   const g=getRunType(),rt=g?g.def:RUN_TYPES.middle;
   if(key==='trunk'&&m.trunk){
     const{abs,dev}=m.trunk,[lo,hi]=rt.trunk.ideal;
-    if(abs>=lo&&abs<=hi)return{t:'good',text:`理想的な前傾（${abs.toFixed(1)}°）。この角度を維持しましょう`};
-    if(abs<lo)return{t:abs<lo-5?'bad':'warn',text:rt.trunk.low+`（現在${abs.toFixed(1)}°→目標${lo}〜${hi}°）`};
-    return{t:'warn',text:rt.trunk.high+`（現在${abs.toFixed(1)}°→目標${lo}〜${hi}°）`};
+    if(abs>=lo&&abs<=hi)return{t:'good',text:adv(`理想的な前傾（${abs.toFixed(1)}°）。この角度を維持しましょう`,`Ideal lean (${abs.toFixed(1)}°). Maintain this angle`)};
+    if(abs<lo)return{t:abs<lo-5?'bad':'warn',text:adv(rt.trunk.low+`（現在${abs.toFixed(1)}°→目標${lo}〜${hi}°）`,`Too upright (${abs.toFixed(1)}° → target ${lo}–${hi}°). Lean forward more`)};
+    return{t:'warn',text:adv(rt.trunk.high+`（現在${abs.toFixed(1)}°→目標${lo}〜${hi}°）`,`Leaning too far forward (${abs.toFixed(1)}° → target ${lo}–${hi}°)`)};
   }
   if(key==='knee'&&m.knee){
     const{peak,mr,ml}=m.knee,minK=rt.knee.min;
     if(peak>=minK){
-      if(mr>0&&ml>0&&Math.abs(mr-ml)>15)return{t:'warn',text:`引き上げは十分ですが左右差あり（右${mr.toFixed(0)}°/左${ml.toFixed(0)}°）`};
-      return{t:'good',text:`十分な引き上げ（最大${peak.toFixed(0)}°）。推進力が出ています`};
+      if(mr>0&&ml>0&&Math.abs(mr-ml)>15)return{t:'warn',text:adv(`引き上げは十分ですが左右差あり（右${mr.toFixed(0)}°/左${ml.toFixed(0)}°）`,`Knee drive OK but left-right asymmetry (R${mr.toFixed(0)}°/L${ml.toFixed(0)}°)`)};
+      return{t:'good',text:adv(`十分な引き上げ（最大${peak.toFixed(0)}°）。推進力が出ています`,`Sufficient knee drive (${peak.toFixed(0)}°). Generating good propulsion`)};
     }
-    return{t:peak<minK-15?'bad':'warn',text:rt.knee.low+`（現在${peak.toFixed(0)}°→目標${minK}°+）`};
+    return{t:peak<minK-15?'bad':'warn',text:adv(rt.knee.low+`（現在${peak.toFixed(0)}°→目標${minK}°+）`,`Insufficient knee drive (${peak.toFixed(0)}° → target ${minK}°+). Lift your knees higher`)};
   }
   if(key==='arm'&&m.arm){
     const{avg,diff}=m.arm,ia=rt.arm.ideal;
-    if(diff>15)return{t:'warn',text:`左右の腕振りに差（${diff.toFixed(0)}°）。骨盤の傾きに注意`};
-    if(Math.abs(avg-ia)<=12)return{t:'good',text:`良好な腕振り（${avg.toFixed(0)}°）。${rt.arm.msg}`};
-    if(avg>ia+12)return{t:'warn',text:`肘が伸びすぎ（${avg.toFixed(0)}°→目標${ia}°）。${rt.arm.msg}`};
-    return{t:'warn',text:`肘をもう少し伸ばして（${avg.toFixed(0)}°→目標${ia}°）。${rt.arm.msg}`};
+    if(diff>15)return{t:'warn',text:adv(`左右の腕振りに差（${diff.toFixed(0)}°）。骨盤の傾きに注意`,`Left-right arm swing asymmetry (${diff.toFixed(0)}°). Check pelvis tilt`)};
+    if(Math.abs(avg-ia)<=12)return{t:'good',text:adv(`良好な腕振り（${avg.toFixed(0)}°）。${rt.arm.msg}`,`Good arm swing (${avg.toFixed(0)}°)`)};
+    if(avg>ia+12)return{t:'warn',text:adv(`肘が伸びすぎ（${avg.toFixed(0)}°→目標${ia}°）。${rt.arm.msg}`,`Elbow too straight (${avg.toFixed(0)}° → target ${ia}°). Bend more`)};
+    return{t:'warn',text:adv(`肘をもう少し伸ばして（${avg.toFixed(0)}°→目標${ia}°）。${rt.arm.msg}`,`Extend elbow slightly more (${avg.toFixed(0)}° → target ${ia}°)`)};
   }
   if(key==='overstride'&&m.overstride){
     const{pct}=m.overstride;
-    if(pct<=15)return{t:'good',text:`重心直下で着地できています（${pct.toFixed(0)}%前方）`};
-    if(pct<=35)return{t:'warn',text:`やや前着地（${pct.toFixed(0)}%前方）。歩幅を縮めて重心下に着地を`};
-    return{t:'bad',text:`前すぎる着地（${pct.toFixed(0)}%前方）。ケイデンスを上げて歩幅を縮めましょう`};
+    if(pct<=15)return{t:'good',text:adv(`重心直下で着地できています（${pct.toFixed(0)}%前方）`,`Landing under center of mass (${pct.toFixed(0)}% forward). Great!`)};
+    if(pct<=35)return{t:'warn',text:adv(`やや前着地（${pct.toFixed(0)}%前方）。歩幅を縮めて重心下に着地を`,`Slight overstriding (${pct.toFixed(0)}% forward). Shorten stride, land under hips`)};
+    return{t:'bad',text:adv(`前すぎる着地（${pct.toFixed(0)}%前方）。ケイデンスを上げて歩幅を縮めましょう`,`Significant overstriding (${pct.toFixed(0)}% forward). Increase cadence to shorten stride`)};
   }
   if(key==='landingKnee'&&m.landingKnee){
     const{flex}=m.landingKnee;
-    if(flex>=15&&flex<=35)return{t:'good',text:`理想的な膝屈曲（${flex.toFixed(0)}°）。衝撃をしっかり吸収できています`};
-    if(flex<15)return{t:flex<8?'bad':'warn',text:`膝が伸びすぎ（${flex.toFixed(0)}°）。ミッドフット着地を意識して膝を曲げて`};
-    return{t:'warn',text:`膝の曲げすぎ（${flex.toFixed(0)}°）。重心が下がりエネルギーロスに`};
+    if(flex>=15&&flex<=35)return{t:'good',text:adv(`理想的な膝屈曲（${flex.toFixed(0)}°）。衝撃をしっかり吸収できています`,`Ideal knee flexion at landing (${flex.toFixed(0)}°). Absorbing impact well`)};
+    if(flex<15)return{t:flex<8?'bad':'warn',text:adv(`膝が伸びすぎ（${flex.toFixed(0)}°）。ミッドフット着地を意識して膝を曲げて`,`Knee too straight at landing (${flex.toFixed(0)}°). Aim for midfoot strike with bent knee`)};
+    return{t:'warn',text:adv(`膝の曲げすぎ（${flex.toFixed(0)}°）。重心が下がりエネルギーロスに`,`Too much knee bend at landing (${flex.toFixed(0)}°). Losing energy to vertical drop`)};
   }
   if(key==='vert'&&m.vert){
     const{pct}=m.vert,lim=rt.vert.limit;
-    if(pct<=lim)return{t:'good',text:`上下動が少なく効率的（${pct.toFixed(1)}%）。前に進む力になっています`};
-    if(pct>lim*2)return{t:'bad',text:`上下動が大きすぎ（${pct.toFixed(1)}%）。${rt.vert.msg}`};
-    return{t:'warn',text:`上下動をもう少し抑えて（${pct.toFixed(1)}%→目標${lim}%以下）。${rt.vert.msg}`};
+    if(pct<=lim)return{t:'good',text:adv(`上下動が少なく効率的（${pct.toFixed(1)}%）。前に進む力になっています`,`Low vertical oscillation — efficient (${pct.toFixed(1)}%)`)};
+    if(pct>lim*2)return{t:'bad',text:adv(`上下動が大きすぎ（${pct.toFixed(1)}%）。${rt.vert.msg}`,`Excessive vertical oscillation (${pct.toFixed(1)}%). Focus on forward, not upward, drive`)};
+    return{t:'warn',text:adv(`上下動をもう少し抑えて（${pct.toFixed(1)}%→目標${lim}%以下）。${rt.vert.msg}`,`Reduce vertical bounce (${pct.toFixed(1)}% → target ≤${lim}%)`)};
   }
   if(key==='cad'&&m.cad){
     const{spm}=m.cad,ideal=rt.cad.ideal;
-    if(Math.abs(spm-ideal)<=10)return{t:'good',text:`理想的なピッチ（${spm} spm）。このリズムを維持して`};
-    if(spm<ideal-10)return{t:spm<ideal-25?'bad':'warn',text:rt.cad.low+`（${spm}→目標${ideal} spm）。メトロノームで練習を`};
-    return{t:'warn',text:`ピッチがやや高め（${spm} spm）。力を抜いてリラックスして走りましょう`};
+    if(Math.abs(spm-ideal)<=10)return{t:'good',text:adv(`理想的なピッチ（${spm} spm）。このリズムを維持して`,`Ideal cadence (${spm} spm). Keep this rhythm`)};
+    if(spm<ideal-10)return{t:spm<ideal-25?'bad':'warn',text:adv(rt.cad.low+`（${spm}→目標${ideal} spm）。メトロノームで練習を`,`Cadence too low (${spm} → target ${ideal} spm). Practice with a metronome`)};
+    return{t:'warn',text:adv(`ピッチがやや高め（${spm} spm）。力を抜いてリラックスして走りましょう`,`Cadence slightly high (${spm} spm). Relax and run smoothly`)};
   }
   return null;
 }
@@ -2061,13 +2249,13 @@ function getCardAdvice(key,m){
 // ── Render results ─────────────────────────────────────────
 function renderCards(m){
   const cards=[
-    {key:'trunk',name:'体幹前傾角',desc:'重力を推進力に変換。省エネな走りの土台',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:'理想5〜15°',sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
-    {key:'knee',name:'膝の引き上げ',desc:'歩幅と推進力に影響。スピードアップの鍵',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:'理想40°+',sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
-    {key:'arm',name:'腕振り角度',desc:'体幹の回転を抑えバランスとリズムを安定させる',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:'理想約90°',sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
-    {key:'overstride',name:'着地位置',desc:'足が重心より前すぎると膝・股関節への衝撃が増大し怪我の原因に。重心直下での着地が理想',val:m.overstride?`${m.overstride.pct.toFixed(0)}%`:'--',unit:'前方オフセット <15%',sc:m.overstride?.score??null,lbl:m.overstride?(m.overstride.pct<=15?'理想的':m.overstride.pct<=30?'やや前':'前すぎ'):'--'},
-    {key:'landingKnee',name:'着地時膝屈曲',desc:'着地の瞬間に膝が適度に曲がると衝撃を吸収しケガを防ぐ。伸びきった状態での着地は危険',val:m.landingKnee?`${m.landingKnee.flex.toFixed(0)}°`:'--',unit:'理想15〜35°',sc:m.landingKnee?.score??null,lbl:m.landingKnee?(m.landingKnee.flex>=15&&m.landingKnee.flex<=35?'理想的':m.landingKnee.flex<15?'伸びすぎ':'曲げすぎ'):'--'},
-    {key:'vert',name:'上下動',desc:'前進に使われない縦方向のエネルギーロス。スタミナに影響',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
-    {key:'cad',name:'ケイデンス',desc:'着地衝撃とケガ予防に影響。高いほど膝・腰への負担が小さい',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
+    {key:'trunk',name:t('metric.trunk'),desc:'重力を推進力に変換。省エネな走りの土台',val:m.trunk?`${m.trunk.abs.toFixed(1)}°`:'--',unit:t('metric.trunk.unit'),sc:m.trunk?.score??null,lbl:m.trunk?(m.trunk.abs>=5&&m.trunk.abs<=15?'理想的':m.trunk.abs<5?'立ちすぎ':'前傾しすぎ'):'--'},
+    {key:'knee',name:t('metric.knee'),desc:'歩幅と推進力に影響。スピードアップの鍵',val:m.knee?`${m.knee.peak.toFixed(0)}°`:'--',unit:t('metric.knee.unit'),sc:m.knee?.score??null,lbl:m.knee?(m.knee.peak>=40?'十分':m.knee.peak>=28?'やや浅い':'浅い'):'--'},
+    {key:'arm',name:t('metric.arm'),desc:'体幹の回転を抑えバランスとリズムを安定させる',val:m.arm?`${m.arm.avg.toFixed(0)}°`:'--',unit:t('metric.arm.unit'),sc:m.arm?.score??null,lbl:m.arm?(Math.abs(m.arm.avg-90)<=10?'良好':m.arm.avg>100?'伸びすぎ':'曲げすぎ'):'--'},
+    {key:'overstride',name:t('metric.overstride'),desc:'足が重心より前すぎると膝・股関節への衝撃が増大し怪我の原因に。重心直下での着地が理想',val:m.overstride?`${m.overstride.pct.toFixed(0)}%`:'--',unit:t('metric.overstride.unit'),sc:m.overstride?.score??null,lbl:m.overstride?(m.overstride.pct<=15?'理想的':m.overstride.pct<=30?'やや前':'前すぎ'):'--'},
+    {key:'landingKnee',name:t('metric.landingKnee'),desc:'着地の瞬間に膝が適度に曲がると衝撃を吸収しケガを防ぐ。伸びきった状態での着地は危険',val:m.landingKnee?`${m.landingKnee.flex.toFixed(0)}°`:'--',unit:t('metric.landingKnee.unit'),sc:m.landingKnee?.score??null,lbl:m.landingKnee?(m.landingKnee.flex>=15&&m.landingKnee.flex<=35?'理想的':m.landingKnee.flex<15?'伸びすぎ':'曲げすぎ'):'--'},
+    {key:'vert',name:t('metric.vert'),desc:'前進に使われない縦方向のエネルギーロス。スタミナに影響',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:t('metric.vert.unit'),sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
+    {key:'cad',name:t('metric.cad'),desc:'着地衝撃とケガ予防に影響。高いほど膝・腰への負担が小さい',val:m.cad?`${m.cad.spm} spm`:'--',unit:t('metric.cad.unit'),sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
   ];
   // ── Total score ──
   const validSc=cards.map(c=>c.sc).filter(v=>v!==null);
@@ -2124,14 +2312,19 @@ function renderAdvice(m){
   const items=[],I={good:'✅',warn:'⚠️',bad:'❌'};
   const g=getRunType(),rt=g?g.def:RUN_TYPES.middle,tn=g?`【${rt.label}向け】`:'';
   // 体幹の安定性（ばらつき）のみ追加
-  if(m.trunk?.dev>8)items.push({t:'warn',text:`体幹の角度にブレがあります（ばらつき${m.trunk.dev.toFixed(1)}°）。腹筋・背筋を意識して上半身を安定させましょう。`});
+  if(m.trunk?.dev>8)items.push({t:'warn',text:LANG==='en'?`Trunk angle is inconsistent (variability ${m.trunk.dev.toFixed(1)}°). Focus on core stability.`:`体幹の角度にブレがあります（ばらつき${m.trunk.dev.toFixed(1)}°）。腹筋・背筋を意識して上半身を安定させましょう。`});
   // 総合ゴールサマリー → TOTAL SCORE 欄に表示
   const goalEl=document.getElementById('tsd-goal');
   if(goalEl){
     if(g){
       const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);
       if(allSc.length){
-        const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、スコアの低い項目から優先して改善しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを強化しましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離には省エネフォームが最重要です。上下動と着地位置を特に意識して。`;
+        let pn;
+        if(LANG==='en'){
+          pn=g.type==='middle'?`For your ${g.dist}km goal (${g.timeStr}, pace ${g.paceStr}/km), prioritize improving your lowest-scoring metrics first.`:g.type==='sprint'?`For sprint pace (${g.paceStr}/km), focus on explosive knee drive and powerful arm swing.`:`For your ${g.dist}km long run (${g.timeStr}, pace ${g.paceStr}/km), energy efficiency is key. Focus on vertical oscillation and landing position.`;
+        }else{
+          pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、スコアの低い項目から優先して改善しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを強化しましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離には省エネフォームが最重要です。上下動と着地位置を特に意識して。`;
+        }
         goalEl.textContent=pn;goalEl.classList.add('show');
       }
     } else {
@@ -2172,6 +2365,7 @@ function hideLoad(){document.getElementById('loading').classList.remove('show');
 window.addEventListener('load',()=>{
   setTimeout(initPoses,400);
   updateGoal();
+  applyLang();
   buildVisualPicker();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
   initFirebase();
@@ -2340,7 +2534,6 @@ function shareResult(){
   const m=lastAnalysis;
   const validSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);
   const total=validSc.length?Math.round(validSc.reduce((a,b)=>a+b,0)/validSc.length):null;
-  const scoreText=total!==null?`総合スコア ${total}点`:'分析完了';
   const getLv=sc=>sc>=80?'GOOD':sc>=60?'OK':'NG';
   const details=[
     m.trunk?.score!=null?`体幹前傾 ${getLv(m.trunk.score)}`:'',
@@ -2348,14 +2541,23 @@ function shareResult(){
     m.cad?.score!=null?`ケイデンス ${getLv(m.cad.score)}`:'',
   ].filter(Boolean).join(' / ');
   const appUrl='https://itsapieceofcake4-max.github.io/running-form-app/motion_capture_app.html';
-  const text=`🏃 RUNFORMで走りを分析しました！\n${scoreText}\n${details}\n\nAIがランニングフォームを7項目でスコア採点。あなたの走りも分析してみて！`;
+  const scoreLabel=LANG==='en'?`Total Score: ${total} pts`:`総合スコア ${total}点`;
+  const detailsEn=[
+    m.trunk?.score!=null?`Trunk ${getLv(m.trunk.score)}`:'',
+    m.knee?.score!=null?`Knee Drive ${getLv(m.knee.score)}`:'',
+    m.cad?.score!=null?`Cadence ${getLv(m.cad.score)}`:'',
+  ].filter(Boolean).join(' / ');
+  const detailsStr=LANG==='en'?detailsEn:details;
+  const introText=LANG==='en'?`🏃 I analyzed my running form with RUNFORM!\n${scoreLabel}\n${detailsStr}\n\nAI scores your running form across 7 metrics. Try it yourself!`
+    :`🏃 RUNFORMで走りを分析しました！\n総合スコア ${total}点\n${details}\n\nAIがランニングフォームを7項目でスコア採点。あなたの走りも分析してみて！`;
+  const shareTitle=LANG==='en'?'RUNFORM — Running Form Analysis':'RUNFORM — ランニングフォーム分析';
   const btn=document.getElementById('share-btn');
   if(navigator.share){
-    navigator.share({title:'RUNFORM — ランニングフォーム分析',text,url:appUrl}).catch(()=>{});
+    navigator.share({title:shareTitle,text:introText,url:appUrl}).catch(()=>{});
   } else {
-    navigator.clipboard.writeText(text+'\n'+appUrl).then(()=>{
-      if(btn){btn.textContent='✅ コピーしました！';btn.classList.add('copied');setTimeout(()=>{btn.textContent='📤 結果をシェア';btn.classList.remove('copied');},2500);}
-    }).catch(()=>alert(text+'\n'+appUrl));
+    navigator.clipboard.writeText(introText+'\n'+appUrl).then(()=>{
+      if(btn){btn.textContent=t('btn.share.copied');btn.classList.add('copied');setTimeout(()=>{btn.textContent=t('btn.share');btn.classList.remove('copied');},2500);}
+    }).catch(()=>alert(introText+'\n'+appUrl));
   }
 }
 async function saveAnalysis(){
