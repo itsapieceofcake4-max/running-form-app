@@ -797,100 +797,10 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 <div class="help-modal" id="help-modal">
   <div class="help-box">
     <div class="help-hd">
-      <h3>RUNFORM 使い方ガイド</h3>
+      <h3 id="help-modal-title">RUNFORM 使い方ガイド</h3>
       <button class="help-close" onclick="closeHelp()">✕</button>
     </div>
-    <div class="help-body">
-
-      <!-- 使い方ステップ -->
-      <div class="help-section">
-        <div class="help-section-title">📱 基本の使い方</div>
-        <div class="help-steps">
-          <div class="help-step">
-            <div class="help-step-num">1</div>
-            <div class="help-step-body">
-              <div class="help-step-title">動画を準備する</div>
-              <div class="help-step-desc">走っている横姿の動画をスマホで撮影。または既存の動画ファイルを選択してください。カメラタブからリアルタイム録画も可能です。</div>
-            </div>
-          </div>
-          <div class="help-step">
-            <div class="help-step-num">2</div>
-            <div class="help-step-body">
-              <div class="help-step-title">動画A（自分）に読み込む</div>
-              <div class="help-step-desc">「動画A（自分）」パネルで「📁 ファイル」または「📸 カメラ」タブから動画をセット。再生すると自動的にAI骨格検出が始まります。</div>
-            </div>
-          </div>
-          <div class="help-step">
-            <div class="help-step-num">3</div>
-            <div class="help-step-body">
-              <div class="help-step-title">3秒以上再生して分析</div>
-              <div class="help-step-desc">再生中にデータを収集します。走っている区間を3秒以上含めてください。データが十分集まると自動で分析結果が表示されます。</div>
-            </div>
-          </div>
-          <div class="help-step">
-            <div class="help-step-num">4</div>
-            <div class="help-step-body">
-              <div class="help-step-title">スコアとアドバイスを確認</div>
-              <div class="help-step-desc">7項目のスコアが<strong style="color:#00e5ff">GOOD</strong>（80点以上）・<strong style="color:#ffb300">OK</strong>（60〜79点）・<strong style="color:#ff4081">NG</strong>（60点未満）で表示されます。スコアの低い項目から優先的に改善しましょう。</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 撮影のコツ -->
-      <div class="help-section">
-        <div class="help-section-title">📷 撮影のコツ</div>
-        <div class="help-tips">
-          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>横から撮る</strong> — カメラは走る方向に対して真横（90°）に置く。斜め前後から撮ると精度が下がります。</span></div>
-          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>全身が映るよう離れる</strong> — 頭からつま先まで画角に入るよう5〜7m離れて撮影。</span></div>
-          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>明るい場所で</strong> — 逆光・暗い室内は検出精度が落ちます。屋外の昼間が最適。</span></div>
-          <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>ゆっくりでも可</strong> — ジョギングペースで十分。スローモーション動画も使えます。</span></div>
-          <div class="help-tip"><span class="help-tip-icon">⚠️</span><span><strong>複数人が映ると誤検出</strong> — できるだけ1人で走っている映像を使ってください。</span></div>
-        </div>
-      </div>
-
-      <!-- 指標の説明 -->
-      <div class="help-section">
-        <div class="help-section-title">📊 7つの評価指標</div>
-        <div class="help-metrics">
-          <div class="help-metric"><div class="help-metric-name">体幹前傾角</div><div class="help-metric-desc">理想は5〜15°の前傾。重力を推進力に変換し省エネな走りの土台になります。</div></div>
-          <div class="help-metric"><div class="help-metric-name">膝の引き上げ</div><div class="help-metric-desc">理想は40°以上。引き上げが深いほど歩幅が広がりスピードが出やすくなります。</div></div>
-          <div class="help-metric"><div class="help-metric-name">腕振り角度</div><div class="help-metric-desc">理想は肘90°。上半身の回転を抑え走りのリズムとバランスを安定させます。</div></div>
-          <div class="help-metric"><div class="help-metric-name">着地位置</div><div class="help-metric-desc">足が重心より前すぎると膝への衝撃が増大。重心直下への着地が理想です。</div></div>
-          <div class="help-metric"><div class="help-metric-name">着地時膝屈曲</div><div class="help-metric-desc">着地瞬間の膝の曲がり（理想15〜35°）。曲げることで衝撃を吸収します。</div></div>
-          <div class="help-metric"><div class="help-metric-name">上下動</div><div class="help-metric-desc">縦方向のエネルギーロス。小さいほど前進効率が高くスタミナ節約になります。</div></div>
-          <div class="help-metric"><div class="help-metric-name">ケイデンス</div><div class="help-metric-desc">1分間の歩数。理想は170〜190spm。高いほど着地衝撃が分散し膝への負担が減ります。</div></div>
-        </div>
-      </div>
-
-      <!-- FAQ -->
-      <div class="help-section">
-        <div class="help-section-title">❓ よくある質問</div>
-        <div class="help-faq">
-          <div class="help-faq-item">
-            <div class="help-faq-q" onclick="toggleFaq(this)"><span>骨格が正しく検出されないのですが</span><span>＋</span></div>
-            <div class="help-faq-a">照明が暗い・逆光・カメラが近すぎる場合に検出精度が落ちます。明るい屋外で全身が映るよう5m以上離れて撮影してください。また、タイツや体にフィットした服装が認識されやすいです。</div>
-          </div>
-          <div class="help-faq-item">
-            <div class="help-faq-q" onclick="toggleFaq(this)"><span>GOOD / OK / NG の判定基準は？</span><span>＋</span></div>
-            <div class="help-faq-a">各項目のスコアに基づいて3段階で評価されます。<br>・<strong style="color:#00e5ff">GOOD</strong>（80点以上）：理想的なフォームです。<br>・<strong style="color:#ffb300">OK</strong>（60〜79点）：おおむね問題ありませんが、改善の余地があります。<br>・<strong style="color:#ff4081">NG</strong>（60点未満）：改善が必要な項目です。アドバイスを参考に意識して練習しましょう。</div>
-          </div>
-          <div class="help-faq-item">
-            <div class="help-faq-q" onclick="toggleFaq(this)"><span>分析結果はどこに保存されますか？</span><span>＋</span></div>
-            <div class="help-faq-a">Googleログイン後に「💾 記録を保存」ボタンが表示されます。保存したデータはサーバー（Firebase）に安全に保管され、「📊 履歴」からいつでも確認できます。</div>
-          </div>
-          <div class="help-faq-item">
-            <div class="help-faq-q" onclick="toggleFaq(this)"><span>スマホのカメラでもリアルタイム分析できますか？</span><span>＋</span></div>
-            <div class="help-faq-a">できます。「カメラ」タブを選択してカメラを起動し、「⏺ 録画・分析開始」で走りながら分析が可能です。ただし端末の処理能力によって精度が変わる場合があります。</div>
-          </div>
-          <div class="help-faq-item">
-            <div class="help-faq-q" onclick="toggleFaq(this)"><span>無料で全機能使えますか？</span><span>＋</span></div>
-            <div class="help-faq-a">現在はベータ版のため全機能を無料で利用できます。今後、課金プランを導入予定ですが、ベータ期間中にご利用いただいた方への特別優遇を検討しています。</div>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    <div class="help-body" id="help-body-content"></div>
   </div>
 </div>
 
@@ -1126,6 +1036,7 @@ function setLang(lang){
   document.documentElement.lang=lang;
   applyLang();
   if(typeof lastAnalysis!=='undefined'&&lastAnalysis){renderCards(lastAnalysis);renderAdvice(lastAnalysis);}
+  if(typeof renderHelpContent==='function')renderHelpContent();
 }
 function applyLang(){
   document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
@@ -2403,7 +2314,101 @@ document.addEventListener('touchend',rsUp);
 });
 
 // ── Help ───────────────────────────────────────────────────
-function showHelp(){document.getElementById('help-modal').classList.add('show');}
+function renderHelpContent(){
+  const el=document.getElementById('help-body-content');
+  const title=document.getElementById('help-modal-title');
+  if(!el)return;
+  if(LANG==='en'){
+    if(title)title.textContent='RUNFORM Guide';
+    el.innerHTML=`
+    <div class="help-section">
+      <div class="help-section-title">📱 How to Use</div>
+      <div class="help-steps">
+        <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">Prepare your video</div><div class="help-step-desc">Record a side-view video of yourself running on your smartphone, or select an existing file. You can also record live from the Camera tab.</div></div></div>
+        <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">Load into Video A (You)</div><div class="help-step-desc">In the "Video A (You)" panel, load your video via the 📁 File or 📸 Camera tab. AI pose detection starts automatically on playback.</div></div></div>
+        <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">Play for 3+ seconds</div><div class="help-step-desc">Data is collected during playback. Make sure at least 3 seconds of running are included. Results appear automatically once enough data is collected.</div></div></div>
+        <div class="help-step"><div class="help-step-num">4</div><div class="help-step-body"><div class="help-step-title">Review scores & advice</div><div class="help-step-desc">7 metrics are scored as <strong style="color:#00e5ff">GOOD</strong> (80+) · <strong style="color:#ffb300">OK</strong> (60–79) · <strong style="color:#ff4081">NG</strong> (&lt;60). Focus on improving your lowest-scoring items first.</div></div></div>
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">📷 Filming Tips</div>
+      <div class="help-tips">
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>Shoot from the side</strong> — Place the camera exactly perpendicular (90°) to your running direction. Diagonal angles reduce accuracy.</span></div>
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>Step back for full-body view</strong> — Stand 5–7m away so your head and feet are both in frame.</span></div>
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>Shoot in bright light</strong> — Backlighting and dark indoor spaces reduce detection quality. Outdoors during the day is ideal.</span></div>
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>Slow pace is fine</strong> — Jogging speed works. Slow-motion video is also supported.</span></div>
+        <div class="help-tip"><span class="help-tip-icon">⚠️</span><span><strong>Avoid multiple people in frame</strong> — Use footage with only one runner for best results.</span></div>
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">📊 7 Evaluation Metrics</div>
+      <div class="help-metrics">
+        <div class="help-metric"><div class="help-metric-name">Trunk Lean</div><div class="help-metric-desc">Ideal: 5–15° forward lean. Converts gravity into propulsion for efficient running.</div></div>
+        <div class="help-metric"><div class="help-metric-name">Knee Drive</div><div class="help-metric-desc">Ideal: 40°+. Greater knee lift means wider stride and more speed.</div></div>
+        <div class="help-metric"><div class="help-metric-name">Arm Swing</div><div class="help-metric-desc">Ideal: elbow at 90°. Stabilizes running rhythm and reduces upper-body rotation.</div></div>
+        <div class="help-metric"><div class="help-metric-name">Landing Position</div><div class="help-metric-desc">Landing too far ahead of your center of mass increases knee impact. Land under your hips.</div></div>
+        <div class="help-metric"><div class="help-metric-name">Landing Knee Flex</div><div class="help-metric-desc">Knee bend at touchdown (ideal 15–35°). Flexion absorbs impact and protects joints.</div></div>
+        <div class="help-metric"><div class="help-metric-name">Vert. Oscillation</div><div class="help-metric-desc">Vertical energy waste. Lower bounce = better forward efficiency and endurance.</div></div>
+        <div class="help-metric"><div class="help-metric-name">Cadence</div><div class="help-metric-desc">Steps per minute. Ideal: 170–190 spm. Higher cadence spreads impact and reduces knee load.</div></div>
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">❓ FAQ</div>
+      <div class="help-faq">
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>Pose detection isn't working correctly</span><span>＋</span></div><div class="help-faq-a">Detection accuracy drops in low light, backlight, or when the camera is too close. Shoot outdoors in good light, 5m+ away with the full body in frame. Fitted clothing (tights, compression wear) also improves detection.</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>What are the GOOD / OK / NG criteria?</span><span>＋</span></div><div class="help-faq-a">Each metric is rated on a 3-tier scale:<br>· <strong style="color:#00e5ff">GOOD</strong> (80+): Ideal form.<br>· <strong style="color:#ffb300">OK</strong> (60–79): Generally fine, but room to improve.<br>· <strong style="color:#ff4081">NG</strong> (&lt;60): Needs work. Follow the advice and practice with focus.</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>Where are my results saved?</span><span>＋</span></div><div class="help-faq-a">After signing in with Google, a "💾 Save Record" button appears. Your data is securely stored on our server (Firebase) and accessible anytime from "📊 History".</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>Can I analyze in real-time with my phone camera?</span><span>＋</span></div><div class="help-faq-a">Yes. Select the Camera tab, start the camera, then press "⏺ Record & Analyze" to analyze while running. Accuracy may vary depending on device performance.</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>Is everything free to use?</span><span>＋</span></div><div class="help-faq-a">All features are free during the current beta period. A paid plan may be introduced in the future, but early beta users will be eligible for special benefits.</div></div>
+      </div>
+    </div>`;
+  } else {
+    if(title)title.textContent='RUNFORM 使い方ガイド';
+    el.innerHTML=`
+    <div class="help-section">
+      <div class="help-section-title">📱 基本の使い方</div>
+      <div class="help-steps">
+        <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">動画を準備する</div><div class="help-step-desc">走っている横姿の動画をスマホで撮影。または既存の動画ファイルを選択してください。カメラタブからリアルタイム録画も可能です。</div></div></div>
+        <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">動画A（自分）に読み込む</div><div class="help-step-desc">「動画A（自分）」パネルで「📁 ファイル」または「📸 カメラ」タブから動画をセット。再生すると自動的にAI骨格検出が始まります。</div></div></div>
+        <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">3秒以上再生して分析</div><div class="help-step-desc">再生中にデータを収集します。走っている区間を3秒以上含めてください。データが十分集まると自動で分析結果が表示されます。</div></div></div>
+        <div class="help-step"><div class="help-step-num">4</div><div class="help-step-body"><div class="help-step-title">スコアとアドバイスを確認</div><div class="help-step-desc">7項目のスコアが<strong style="color:#00e5ff">GOOD</strong>（80点以上）・<strong style="color:#ffb300">OK</strong>（60〜79点）・<strong style="color:#ff4081">NG</strong>（60点未満）で表示されます。スコアの低い項目から優先的に改善しましょう。</div></div></div>
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">📷 撮影のコツ</div>
+      <div class="help-tips">
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>横から撮る</strong> — カメラは走る方向に対して真横（90°）に置く。斜め前後から撮ると精度が下がります。</span></div>
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>全身が映るよう離れる</strong> — 頭からつま先まで画角に入るよう5〜7m離れて撮影。</span></div>
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>明るい場所で</strong> — 逆光・暗い室内は検出精度が落ちます。屋外の昼間が最適。</span></div>
+        <div class="help-tip"><span class="help-tip-icon">✅</span><span><strong>ゆっくりでも可</strong> — ジョギングペースで十分。スローモーション動画も使えます。</span></div>
+        <div class="help-tip"><span class="help-tip-icon">⚠️</span><span><strong>複数人が映ると誤検出</strong> — できるだけ1人で走っている映像を使ってください。</span></div>
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">📊 7つの評価指標</div>
+      <div class="help-metrics">
+        <div class="help-metric"><div class="help-metric-name">体幹前傾角</div><div class="help-metric-desc">理想は5〜15°の前傾。重力を推進力に変換し省エネな走りの土台になります。</div></div>
+        <div class="help-metric"><div class="help-metric-name">膝の引き上げ</div><div class="help-metric-desc">理想は40°以上。引き上げが深いほど歩幅が広がりスピードが出やすくなります。</div></div>
+        <div class="help-metric"><div class="help-metric-name">腕振り角度</div><div class="help-metric-desc">理想は肘90°。上半身の回転を抑え走りのリズムとバランスを安定させます。</div></div>
+        <div class="help-metric"><div class="help-metric-name">着地位置</div><div class="help-metric-desc">足が重心より前すぎると膝への衝撃が増大。重心直下への着地が理想です。</div></div>
+        <div class="help-metric"><div class="help-metric-name">着地時膝屈曲</div><div class="help-metric-desc">着地瞬間の膝の曲がり（理想15〜35°）。曲げることで衝撃を吸収します。</div></div>
+        <div class="help-metric"><div class="help-metric-name">上下動</div><div class="help-metric-desc">縦方向のエネルギーロス。小さいほど前進効率が高くスタミナ節約になります。</div></div>
+        <div class="help-metric"><div class="help-metric-name">ケイデンス</div><div class="help-metric-desc">1分間の歩数。理想は170〜190spm。高いほど着地衝撃が分散し膝への負担が減ります。</div></div>
+      </div>
+    </div>
+    <div class="help-section">
+      <div class="help-section-title">❓ よくある質問</div>
+      <div class="help-faq">
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>骨格が正しく検出されないのですが</span><span>＋</span></div><div class="help-faq-a">照明が暗い・逆光・カメラが近すぎる場合に検出精度が落ちます。明るい屋外で全身が映るよう5m以上離れて撮影してください。また、タイツや体にフィットした服装が認識されやすいです。</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>GOOD / OK / NG の判定基準は？</span><span>＋</span></div><div class="help-faq-a">各項目のスコアに基づいて3段階で評価されます。<br>・<strong style="color:#00e5ff">GOOD</strong>（80点以上）：理想的なフォームです。<br>・<strong style="color:#ffb300">OK</strong>（60〜79点）：おおむね問題ありませんが、改善の余地があります。<br>・<strong style="color:#ff4081">NG</strong>（60点未満）：改善が必要な項目です。アドバイスを参考に意識して練習しましょう。</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>分析結果はどこに保存されますか？</span><span>＋</span></div><div class="help-faq-a">Googleログイン後に「💾 記録を保存」ボタンが表示されます。保存したデータはサーバー（Firebase）に安全に保管され、「📊 履歴」からいつでも確認できます。</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>スマホのカメラでもリアルタイム分析できますか？</span><span>＋</span></div><div class="help-faq-a">できます。「カメラ」タブを選択してカメラを起動し、「⏺ 録画・分析開始」で走りながら分析が可能です。ただし端末の処理能力によって精度が変わる場合があります。</div></div>
+        <div class="help-faq-item"><div class="help-faq-q" onclick="toggleFaq(this)"><span>無料で全機能使えますか？</span><span>＋</span></div><div class="help-faq-a">現在はベータ版のため全機能を無料で利用できます。今後、課金プランを導入予定ですが、ベータ期間中にご利用いただいた方への特別優遇を検討しています。</div></div>
+      </div>
+    </div>`;
+  }
+}
+function showHelp(){renderHelpContent();document.getElementById('help-modal').classList.add('show');}
 function closeHelp(){document.getElementById('help-modal').classList.remove('show');}
 function toggleFaq(el){
   const a=el.nextElementSibling;
