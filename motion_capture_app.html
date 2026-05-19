@@ -62,10 +62,22 @@ select.cam-sel{flex:1;padding:7px 8px;background:#0a0a1f;border:1px solid #2a2a5
 .rec-timer{font-size:.82rem;color:#ff4081;font-weight:700;font-family:monospace;min-width:40px}
 
 /* Video wrapper */
-.vw{position:relative;width:100%;background:#08080f;overflow:hidden;aspect-ratio:9/16;max-height:440px}
+.vw{position:relative;width:100%;background:#07071c;overflow:hidden;aspect-ratio:9/16;max-height:440px}
 .vw video,.vw canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
-.vwph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#3a3a6a}
-.vwph .ic{font-size:2.2rem}.vwph .tx{font-size:.76rem;text-align:center;padding:0 10px;line-height:1.4}
+/* プレビューモード: 動画の実際の縦横比で自然表示 */
+.vw.preview-mode{aspect-ratio:unset;max-height:520px;height:auto}
+.vw.preview-mode video{position:relative;inset:auto;width:100%;height:auto;max-height:520px;object-fit:contain;display:block}
+
+/* ── Upload Zone (vwph) ── */
+.vwph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:28px 20px 20px;background:linear-gradient(180deg,#06061a 0%,#0c0c24 100%);cursor:pointer;transition:background .2s}
+.vwph:hover{background:linear-gradient(180deg,#07071f 0%,#0e0e2a 100%)}
+.upload-zone-inner{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;pointer-events:none}
+.upload-arrow-wrap{width:72px;height:72px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04)}
+.upload-title{font-size:.95rem;font-weight:600;color:#e8e8ff;line-height:1.7;letter-spacing:.01em}
+.upload-fmt{font-size:.67rem;color:#4a5a7a;letter-spacing:.03em}
+.upload-btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 30px;border-radius:100px;background:linear-gradient(135deg,#0077e6,#0057c2);color:#fff;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;pointer-events:auto;border:none;letter-spacing:.02em;box-shadow:0 4px 16px rgba(0,119,230,0.35)}
+.upload-btn:hover{background:linear-gradient(135deg,#0088ff,#0066d9);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,136,255,0.45)}
+.upload-hint{font-size:.63rem;color:#323450;text-align:center;pointer-events:none;line-height:1.5}
 .tke{position:absolute;inset:0;display:none;overflow:hidden}
 .tke iframe{width:100%;height:100%;border:none}
 .tknote{font-size:.66rem;color:#6060a0;padding:3px 11px;text-align:center;background:#0a0a1f;border-top:1px solid #1e1e40;line-height:1.4}
@@ -78,6 +90,8 @@ select.cam-sel{flex:1;padding:7px 8px;background:#0a0a1f;border:1px solid #2a2a5
 .bc{padding:8px 14px;border-radius:8px;border:1px solid #2a2a5a;background:#1a1a3e;color:#e0e0ff;cursor:pointer;font-size:.8rem;transition:all .2s;min-height:40px}
 .bc:active{opacity:.8}
 .bc.on{background:#00e5ff22;border-color:#00e5ff55;color:#00e5ff}
+.bc-preview{border-color:#2a4a2a;background:#0e1e0e;color:#60c060}
+.bc-preview.playing{background:#00e5ff11;border-color:#00c05055;color:#00c080}
 .toggles{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
 .tgi{display:flex;align-items:center;gap:5px;font-size:.76rem;color:#8080b0}
 .sw{position:relative;width:34px;height:19px;cursor:pointer;flex-shrink:0}
@@ -201,8 +215,9 @@ input[type="range"]{-webkit-appearance:none;height:4px;border-radius:4px;backgro
 input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#00e5ff;cursor:pointer;border:2px solid #00b8d4;box-shadow:0 0 4px #00e5ff44}
 input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#00e5ff;cursor:pointer;border:2px solid #00b8d4;box-shadow:none}
 
-/* ── Ref Panel Toggle ── */
-.ref-toggle-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#0a0a1f;border:1px solid #1a1a3a;border-radius:10px}
+/* ── Ref Panel Toggle (将来機能 v2.0予定 / 現バージョン非表示) ── */
+.ref-toggle-bar{display:none!important}
+/* .ref-toggle-bar--enabled{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#0a0a1f;border:1px solid #1a1a3a;border-radius:10px} */
 .ref-toggle-btn{display:flex;align-items:center;gap:6px;padding:6px 16px;border-radius:7px;border:1px solid #2a2a5a;background:transparent;color:#8080b0;cursor:pointer;font-size:.8rem;transition:all .2s;white-space:nowrap}
 .ref-toggle-btn.open{background:#1a1a3a;border-color:#ffd54f88;color:#ffd54f}
 .ref-toggle-hint{font-size:.71rem;color:#4a4a7a;line-height:1.3}
@@ -279,6 +294,9 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 /* ── Help Button ── */
 .help-btn{width:28px;height:28px;border-radius:50%;border:1px solid #2a2a5a;background:#0a0a20;color:#6080a0;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .help-btn:hover{border-color:#00e5ff55;color:#00e5ff;background:#00e5ff0a}
+/* ── Feedback Button ── */
+.feedback-btn{position:fixed;bottom:20px;right:20px;z-index:2000;background:linear-gradient(135deg,#1a1a3e,#0d0d2b);border:1px solid #ff408155;border-radius:24px;color:#ff8fb0;font-size:.78rem;font-weight:600;padding:9px 16px;cursor:pointer;transition:all .25s;box-shadow:0 2px 12px rgba(255,64,129,.15);letter-spacing:.03em;text-decoration:none;display:flex;align-items:center;gap:6px}
+.feedback-btn:hover{background:linear-gradient(135deg,#ff408122,#1a1a3e);border-color:#ff4081aa;color:#ff4081;box-shadow:0 4px 20px rgba(255,64,129,.3);transform:translateY(-2px)}
 /* ── Help Modal ── */
 .help-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;overflow-y:auto;padding:16px 12px}
 .help-modal.show{display:flex;flex-direction:column;align-items:center}
@@ -347,17 +365,70 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 .hist-empty{text-align:center;padding:32px;color:#404060;font-size:.85rem}
 .hist-del{padding:4px 8px;border-radius:6px;border:1px solid #3a1a2a;background:transparent;color:#ff408166;font-size:.7rem;cursor:pointer}
 .hist-del:hover{border-color:#ff4081;color:#ff4081}
+
+/* ── Score Panel (right of radar) ── */
+.radar-layout{display:grid;grid-template-columns:220px 1fr;gap:14px;padding:14px 13px;border-bottom:1px solid #1e1e40}
+.score-panel{display:flex;flex-direction:column;gap:10px}
+.total-score-display{padding:14px 16px;background:#08081e;border-radius:12px;border:1px solid #1e1e3a}
+.tsd-label{font-size:.58rem;color:#506070;letter-spacing:.16em;text-transform:uppercase;font-weight:700;margin-bottom:2px}
+.tsd-row{display:flex;align-items:baseline;gap:6px}
+.tsd-num{font-family:'Bebas Neue',sans-serif;font-size:4rem;line-height:1;color:#00e5ff;letter-spacing:.02em;transition:color .4s}
+.tsd-denom{font-size:.76rem;color:#3a5060;font-weight:600;margin-top:4px}
+
+/* ── Metric Bars ── */
+.mbar{display:flex;align-items:center;gap:8px;padding:4px 0}
+.mbar-name{font-size:.7rem;color:#a0b0c0;width:76px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbar-track{flex:1;height:7px;background:#131326;border-radius:7px;overflow:hidden;min-width:0}
+.mbar-fill{height:100%;border-radius:7px;transition:width .7s cubic-bezier(.25,.8,.25,1)}
+.mbar-score{font-size:.78rem;font-weight:700;width:26px;text-align:right;flex-shrink:0}
+
+/* ── Advice Cards ── */
+.advsec{padding:12px 13px}
+.advsec>h3{font-size:.82rem;margin-bottom:10px;color:#c0c0e0;font-weight:600}
+/* 左2列×3行 + 右列1カード＋動画 */
+.adv-cards{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:10px;margin-bottom:14px;align-items:stretch}
+/* 動画セル: 右列の行2〜3を占有 */
+.adv-video-cell{grid-column:3;grid-row:2/4;border-radius:12px;overflow:hidden;border:1px solid #252545;background:#000;display:flex;flex-direction:column;position:relative;min-height:160px}
+.adv-video-cell video{width:100%;flex:1;min-height:0;object-fit:contain;display:block;background:#000}
+.adv-video-cell-lbl{padding:6px 10px;font-size:.62rem;color:#506080;letter-spacing:.08em;text-align:center;background:#06061a;border-top:1px solid #1a1a38;flex-shrink:0}
+.adv-video-cell-ph{flex:1;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#303050;text-align:center;padding:16px;line-height:1.6}
+.adv-card{background:#0c0c22;border:1px solid #1e1e3a;border-radius:12px;padding:14px 13px;display:flex;flex-direction:column;gap:7px;position:relative;overflow:hidden}
+.adv-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.adv-card.good::before{background:linear-gradient(90deg,#00b8d4,#00e5ff)}
+.adv-card.warn::before{background:linear-gradient(90deg,#e07000,#ffb300)}
+.adv-card.bad::before{background:linear-gradient(90deg,#cc2040,#ff4081)}
+.adv-card-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0}
+.adv-card.good .adv-card-badge{background:#00e5ff18;border:1px solid #00e5ff44;color:#00e5ff}
+.adv-card.warn .adv-card-badge{background:#ff980018;border:1px solid #ff980055;color:#ffb300}
+.adv-card.bad  .adv-card-badge{background:#ff408118;border:1px solid #ff408144;color:#ff4081}
+.adv-card-name{font-size:.78rem;font-weight:700;color:#d0d0f0;letter-spacing:.02em}
+.adv-card-score-row{display:flex;align-items:baseline;gap:4px}
+.adv-card-score{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;line-height:1;letter-spacing:.02em}
+.adv-card.good .adv-card-score{color:#00e5ff}
+.adv-card.warn .adv-card-score{color:#ffb300}
+.adv-card.bad  .adv-card-score{color:#ff4081}
+.adv-card-denom{font-size:.7rem;color:#404060;font-weight:600;padding-bottom:2px}
+.adv-card-unit{font-size:.63rem;color:#4a5870;line-height:1.4;border-top:1px solid #1a1a3a;padding-top:6px}
+.adv-card-text{font-size:.7rem;color:#7080a0;line-height:1.55;flex:1}
+.adv-level{display:inline-flex;align-items:center;justify-content:center;padding:3px 14px;border-radius:20px;font-size:.72rem;font-weight:800;letter-spacing:.14em;align-self:flex-start;margin-top:4px}
+.adv-level.good{background:#00e5ff22;color:#00e5ff;border:1px solid #00e5ff55}
+.adv-level.warn{background:#ffb30022;color:#ffb300;border:1px solid #ffb30055}
+.adv-level.bad {background:#ff408122;color:#ff4081;border:1px solid #ff408155}
+
 /* Responsive */
 @media(max-width:640px){
   .panels-row{grid-template-columns:1fr}
   .radar-layout{grid-template-columns:1fr;justify-items:center}
-  .metric-grid{grid-template-columns:1fr 1fr}
+  .score-panel{width:100%}
   #radar-canvas{max-width:190px}
   .ctrl{gap:5px}
   .toggles{margin-left:0;width:100%}
   .goal-inputs{flex-direction:column;gap:7px}
+  /* モバイル: 2カラム通常フロー、動画セルは非表示 */
+  .adv-cards{grid-template-columns:1fr 1fr;grid-auto-flow:row}
+  .adv-video-cell{display:none}
 }
-@media(max-width:380px){.metric-grid{grid-template-columns:1fr}}
+@media(max-width:420px){.adv-cards{grid-template-columns:1fr;grid-auto-flow:row}.adv-video-cell{display:none}}
 @supports(padding:max(0px)){.wrap{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
 </style>
 </head>
@@ -389,8 +460,8 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
     <button class="compare-bar-btn" onclick="showComparison()">📊 フォームを比較する</button>
   </div>
 
-  <!-- Ref Panel Toggle -->
-  <div class="ref-toggle-bar">
+  <!-- Ref Panel Toggle (将来機能 v2.0予定 / 現バージョン非表示) -->
+  <div class="ref-toggle-bar" style="display:none!important">
     <button class="ref-toggle-btn" id="ref-toggle-btn" onclick="toggleRefPanel()">＋ お手本動画（A）を表示</button>
     <span class="ref-toggle-hint">プロや理想フォームと並べて比較できます</span>
   </div>
@@ -440,7 +511,19 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
         </div>
       </div>
       <div class="vw" id="left-vw">
-        <div class="vwph" id="left-ph"><div class="ic">🎬</div><div class="tx">動画を読み込むか<br>カメラを開始してください</div></div>
+        <div class="vwph" id="left-ph" onclick="document.getElementById('lfi').click()">
+        <div class="upload-zone-inner">
+          <div class="upload-arrow-wrap">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 24V8M16 8L8 16M16 8L24 16" stroke="rgba(255,255,255,0.85)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="upload-title">走り動画をドロップ、または<br>クリックして選択</div>
+          <div class="upload-fmt">対応形式: MP4 / MOV / AVI（最大300MB）</div>
+          <label class="upload-btn" for="lfi" onclick="event.stopPropagation()">動画を選択する</label>
+        </div>
+        <div class="upload-hint">スマートフォンで撮影した動画もそのまま使用できます</div>
+      </div>
         <video id="left-video" loop playsinline></video>
         <canvas id="left-canvas"></canvas>
         <div class="tke" id="left-tke"></div>
@@ -466,18 +549,13 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
     </div>
 
     <div class="panel">
-      <div class="ph"><h2>動画 B（練習）</h2><span class="badge p">自分</span></div>
+      <div class="ph"><h2>動画 A（自分）</h2><span class="badge p">自分</span></div>
       <div class="inp">
         <div class="tabs">
-          <button class="tb active" onclick="switchTab('right','tiktok',this)">TikTok</button>
-          <button class="tb" onclick="switchTab('right','file',this)">📁 ファイル</button>
+          <button class="tb active" onclick="switchTab('right','file',this)">📁 ファイル</button>
           <button class="tb" onclick="switchTab('right','camera',this)">📸 カメラ</button>
         </div>
-        <div class="tp active" id="right-tab-tiktok">
-          <input class="ui" id="right-tiktok-url" placeholder="TikTok URL...">
-          <button class="btn btn-p" onclick="loadTikTok('right')">読込</button>
-        </div>
-        <div class="tp" id="right-tab-file">
+        <div class="tp active" id="right-tab-file">
           <label class="fl" for="rfi">📁 動画ファイルを選択（再生で自動分析）</label>
           <input type="file" id="rfi" accept="video/*" onchange="loadVideoFile('right',this)">
         </div>
@@ -499,7 +577,19 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
         </div>
       </div>
       <div class="vw" id="right-vw">
-        <div class="vwph" id="right-ph"><div class="ic">🎥</div><div class="tx">動画を読み込むか<br>カメラを開始してください</div></div>
+        <div class="vwph" id="right-ph" onclick="document.getElementById('rfi').click()">
+        <div class="upload-zone-inner">
+          <div class="upload-arrow-wrap">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 24V8M16 8L8 16M16 8L24 16" stroke="rgba(255,255,255,0.85)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="upload-title">走り動画をドロップ、または<br>クリックして選択</div>
+          <div class="upload-fmt">対応形式: MP4 / MOV / AVI（最大300MB）</div>
+          <label class="upload-btn" for="rfi" onclick="event.stopPropagation()">動画を選択する</label>
+        </div>
+        <div class="upload-hint">スマートフォンで撮影した動画もそのまま使用できます</div>
+      </div>
         <video id="right-video" loop playsinline></video>
         <canvas id="right-canvas"></canvas>
         <div class="tke" id="right-tke"></div>
@@ -520,7 +610,6 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
           <span id="right-rs-tdur">--:--</span>
         </div>
       </div>
-      <div class="tknote" id="right-tknote" style="display:none">※ TikTok埋め込みはモーション解析非対応</div>
       <div class="statusb" id="right-sb">動画を読み込んでください</div>
     </div>
 
@@ -529,7 +618,8 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
   <!-- Controls -->
   <div class="ctrl">
     <span class="ctrl-lbl">動画再生</span>
-    <button class="bc" id="btn-play" onclick="syncPlay()">▶ 再生・分析</button>
+    <button class="bc bc-preview" id="btn-preview" onclick="previewPlay()">▶ プレビュー</button>
+    <button class="bc" id="btn-play" onclick="syncPlay()">🔍 再生・分析</button>
     <button class="bc" onclick="pauseAll()">⏸ 一時停止</button>
     <button class="bc" onclick="resetAll()">⏮ リセット</button>
     <div class="toggles">
@@ -571,7 +661,8 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
   <div class="asec">
     <div class="mtabs">
       <button class="mt active" id="tab-run" onclick="setMode('running')">🏃 ランニング解析</button>
-      <button class="mt" id="tab-cmp" onclick="setMode('compare')">🔄 動画比較（リアルタイム）</button>
+      <!-- 将来機能 v2.0予定: 動画比較タブ (現バージョン非表示) -->
+      <!-- <button class="mt" id="tab-cmp" onclick="setMode('compare')">🔄 動画比較（リアルタイム）</button> -->
     </div>
 
     <div id="mode-running">
@@ -627,17 +718,26 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
         </div>
         <div class="radar-layout">
           <div class="radar-wrap">
-            <h4>フォーム総合評価</h4>
             <canvas id="radar-canvas"></canvas>
           </div>
-          <div class="metric-grid" id="metric-grid"></div>
+          <div class="score-panel">
+            <div class="total-score-display">
+              <div class="tsd-label">TOTAL SCORE</div>
+              <div class="tsd-row">
+                <div class="tsd-num" id="tsd-num">--</div>
+                <div class="tsd-denom">/ 100 pts</div>
+              </div>
+            </div>
+            <div id="metric-grid"></div>
+          </div>
         </div>
         <div class="save-row" id="save-row" style="display:none">
           <button class="save-btn" id="save-btn" onclick="saveAnalysis()">💾 記録を保存</button>
           <button class="hist-open-btn" onclick="showHistory()">📊 履歴を見る</button>
         </div>
         <div class="advsec">
-          <h3>フォーム診断・アドバイス</h3>
+          <h3>各指標の詳細アドバイス</h3>
+          <div class="adv-cards" id="adv-cards"></div>
           <div class="advlist" id="run-advice"></div>
         </div>
       </div>
@@ -1136,6 +1236,7 @@ function showStateDone(frameCount,camAngle=0){
   document.getElementById('done-frames').textContent=frameCount+'フレームを分析（'+Math.round(frameCount*FRAME_MS/1000)+'秒分）'+corrTxt;
 }
 
+
 function updateCollectionUI(side){
   const h=HIST[side];
   const span=h.length>1?(h[h.length-1].t-h[0].t)/1000:0;
@@ -1303,9 +1404,13 @@ function loadVideoFile(side,inp){
 
   document.getElementById(`${side}-ph`).style.display='none';
   document.getElementById(`${side}-tke`).style.display='none';
-  document.getElementById(`${side}-canvas`).style.display='block';
-  s.hasVideo=true;s.isTikTok=false;
-  setSB(side,'読み込み完了: '+file.name,'ready');
+  // プレビューモード: video要素をそのまま表示（縦横比を自然に保つ）
+  const vwEl=document.getElementById(`${side}-vw`);
+  vwEl.classList.add('preview-mode');
+  document.getElementById(`${side}-video`).style.display='block';
+  document.getElementById(`${side}-canvas`).style.display='none';
+  s.hasVideo=true;s.isTikTok=false;s.previewMode=true;
+  setSB(side,'読み込み完了: '+file.name+'　▶ 再生・分析 で解析開始','ready');
   if(S.panel===side)showStateWaiting();
 }
 
@@ -1448,12 +1553,49 @@ function setPanel(side){
   document.getElementById('sel-right').classList.toggle('active',side==='right');
 }
 
+// ── Preview Play (分析なしで動画確認) ──────────────────────
+function previewPlay(){
+  const side=S.panel;
+  const s=S[side];
+  if(!s.hasVideo||s.cameraStream){return;}
+  const video=document.getElementById(`${side}-video`);
+  const btn=document.getElementById('btn-preview');
+  // プレビューモードを確保
+  document.getElementById(`${side}-vw`).classList.add('preview-mode');
+  document.getElementById(`${side}-video`).style.display='block';
+  document.getElementById(`${side}-canvas`).style.display='none';
+  s.previewMode=true;
+  if(video.paused){
+    video.currentTime=s.rangeStart||0;
+    video.loop=true;
+    video.play();
+    if(btn){btn.textContent='⏸ 停止';btn.classList.add('playing');}
+    // 再生終了 or 分析開始で自動停止
+    video.addEventListener('ended',()=>{
+      video.pause();video.currentTime=s.rangeStart||0;
+      if(btn){btn.textContent='▶ プレビュー';btn.classList.remove('playing');}
+    },{once:true});
+  }else{
+    video.pause();video.loop=false;
+    if(btn){btn.textContent='▶ プレビュー';btn.classList.remove('playing');}
+  }
+}
+
 // ── Playback ───────────────────────────────────────────────
 function syncPlay(){
   if(!S.left.hasVideo&&!S.right.hasVideo){
     const hasTk=S.left.isTikTok||S.right.isTikTok;
     alert(hasTk?'TikTok埋め込みは解析・再生操作ができません。\nSnapTikなどでmp4をダウンロードし「ファイル」タブからアップロードしてください。':'動画ファイルを読み込んでください。');return;
   }
+  // プレビューモード → 解析モードへ切り替え（video非表示・canvas表示）
+  ['left','right'].forEach(side=>{
+    if(S[side].hasVideo&&!S[side].cameraStream){
+      document.getElementById(`${side}-vw`).classList.remove('preview-mode');
+      document.getElementById(`${side}-video`).style.display='none';
+      document.getElementById(`${side}-canvas`).style.display='block';
+      S[side].previewMode=false;
+    }
+  });
   // Start collecting
   ['left','right'].forEach(side=>{
     if(S[side].hasVideo&&!S[side].cameraStream){
@@ -1484,6 +1626,15 @@ function resetAll(){
   const lv=document.getElementById('left-video'),rv=document.getElementById('right-video');
   if(!S.left.cameraStream){lv.currentTime=S.left.rangeStart||0;S.left.isCollecting=false;}
   if(!S.right.cameraStream){rv.currentTime=S.right.rangeStart||0;S.right.isCollecting=false;}
+  // プレビューモードに戻す
+  ['left','right'].forEach(side=>{
+    if(S[side].hasVideo&&!S[side].cameraStream){
+      document.getElementById(`${side}-vw`).classList.add('preview-mode');
+      document.getElementById(`${side}-video`).style.display='block';
+      document.getElementById(`${side}-canvas`).style.display='none';
+      S[side].previewMode=true;
+    }
+  });
   HIST.left=[];HIST.right=[];
   showStateWaiting();
 }
@@ -1907,13 +2058,56 @@ function renderCards(m){
     {key:'vert',name:'上下動',desc:'前進に使われない縦方向のエネルギーロス。スタミナに影響',val:m.vert?`${m.vert.pct.toFixed(1)}%`:'--',unit:'体高比 <4%',sc:m.vert?.score??null,lbl:m.vert?(m.vert.pct<=3?'安定':m.vert.pct<=6?'やや多い':'多すぎ'):'--'},
     {key:'cad',name:'ケイデンス',desc:'着地衝撃とケガ予防に影響。高いほど膝・腰への負担が小さい',val:m.cad?`${m.cad.spm} spm`:'--',unit:'理想170〜190',sc:m.cad?.score??null,lbl:m.cad?(m.cad.spm>=170&&m.cad.spm<=190?'理想的':m.cad.spm<170?'遅め':'速め'):'--'},
   ];
+  // ── Total score ──
+  const validSc=cards.map(c=>c.sc).filter(v=>v!==null);
+  const totSc=validSc.length?Math.round(validSc.reduce((a,b)=>a+b,0)/validSc.length):null;
+  const tsdEl=document.getElementById('tsd-num');
+  if(tsdEl){tsdEl.textContent=totSc!==null?totSc:'--';tsdEl.style.color=totSc!==null?col(totSc):'#404060';}
+
+  // ── Metric bars (right of radar) ──
   document.getElementById('metric-grid').innerHTML=cards.map(c=>{
-    const sc=c.sc??0,clr=c.sc!==null?col(sc):'#404060';
-    const diag=metricSVG(c.key,m);
-    const adv=getCardAdvice(c.key,m);
-    const advHtml=adv?`<div class="mc-advice ${adv.t}"><span class="mc-advice-icon">${adv.t==='good'?'✅':adv.t==='warn'?'⚠️':'❌'}</span><span>${adv.text}</span></div>`:'';
-    return `<div class="mc"><div class="mc-top"><span class="mc-name">${c.name}</span><span class="mc-sc ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc)+'%':''}</span></div><div class="mc-desc">${c.desc}</div><div class="mc-val">${c.val}<span class="mc-unit">${c.unit}</span></div><div class="mb"><div class="mbf" style="width:${sc}%;background:${clr}"></div></div>${diag}<div class="mc-lbl">${c.lbl}</div>${advHtml}</div>`;
+    const sc=c.sc??0,clr=c.sc!==null?col(sc):'#2a2a4a';
+    return `<div class="mbar"><div class="mbar-name">${c.name}</div><div class="mbar-track"><div class="mbar-fill" style="width:${c.sc!==null?sc:0}%;background:${clr}"></div></div><div class="mbar-score ${c.sc!==null?cls2(sc):''}">${c.sc!==null?Math.round(sc):'--'}</div></div>`;
   }).join('');
+
+  // ── Per-metric advice cards ──
+  const advCardsEl=document.getElementById('adv-cards');
+  if(advCardsEl){
+    const ICON={good:'✓',warn:'⚠',bad:'↑'};
+    const getLevelInfo=sc=>sc>=80?{text:'GOOD',cls:'good'}:sc>=60?{text:'OK',cls:'warn'}:{text:'NG',cls:'bad'};
+    const html=cards.map(c=>{
+      const adv=getCardAdvice(c.key,m);
+      if(!adv)return '';
+      const sc=Math.round(c.sc??0);
+      const lv=c.sc!==null?getLevelInfo(sc):{text:'--',cls:'warn'};
+      return `<div class="adv-card ${adv.t}">
+        <div class="adv-card-badge">${ICON[adv.t]||'·'}</div>
+        <div class="adv-card-name">${c.name}</div>
+        <div class="adv-card-score-row"><span class="adv-card-score ${cls2(sc)}">${c.sc!==null?sc:'--'}</span><span class="adv-card-denom">/100</span></div>
+        <div class="adv-level ${lv.cls}">${lv.text}</div>
+        <div class="adv-card-unit">${c.val}&nbsp;&nbsp;${c.unit}</div>
+        <div class="adv-card-text">${adv.text}</div>
+      </div>`;
+    }).filter(h=>h).join('');
+
+    // ── 右列の動画セル（行2〜3）──
+    const srcVid=document.getElementById(`${S.panel}-video`);
+    const vidSrc=srcVid?.src||'';
+    const videoCell=`<div class="adv-video-cell" id="adv-video-cell">
+      ${vidSrc
+        ?`<video id="adv-cell-video" src="${vidSrc}" loop playsinline muted></video>`
+        :`<div class="adv-video-cell-ph">動画を読み込むと<br>ここに表示されます</div>`}
+      <div class="adv-video-cell-lbl">📹 あなたの走り</div>
+    </div>`;
+
+    advCardsEl.innerHTML=(html||'<div class="advph">解析完了後に各指標のアドバイスが表示されます</div>')+videoCell;
+
+    // 動画再生開始
+    if(vidSrc){
+      const av=document.getElementById('adv-cell-video');
+      if(av)av.play().catch(()=>{});
+    }
+  }
 }
 function renderAdvice(m){
   const items=[],I={good:'✅',warn:'⚠️',bad:'❌'};
@@ -1968,7 +2162,6 @@ window.addEventListener('load',()=>{
   initFirebase();
 });
 document.getElementById('left-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('left');});
-document.getElementById('right-tiktok-url').addEventListener('keydown',e=>{if(e.key==='Enter')loadTikTok('right');});
 window.addEventListener('resize',()=>{drawRadar([null,null,null,null,null,null,null]);});
 
 // Range selector drag events
@@ -2194,5 +2387,11 @@ async function deleteAnalysis(id,btn){
 function closeHistory(){document.getElementById('hist-modal').classList.remove('show');}
 document.getElementById('hist-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeHistory();});
 </script>
+
+<!-- Feedback Button -->
+<a class="feedback-btn" href="https://docs.google.com/forms/d/e/1FAIpQLSenW_A7iNCa9I424p7bfBvKcJjPeZp8L8Foo8GG-MwBObc_9Q/viewform?usp=header" target="_blank" rel="noopener">
+  💬 ご意見はこちら
+</a>
+
 </body>
 </html>

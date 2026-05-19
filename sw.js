@@ -1,4 +1,4 @@
-const CACHE = 'running-form-v1';
+const CACHE = 'running-form-v4';
 const STATIC = ['./motion_capture_app.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
@@ -20,12 +20,12 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
   }
-  // Local files: cache first
+  // Local files: network first (最新版を優先), fallback to cache
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+    fetch(e.request).then(res => {
       const clone = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, clone));
       return res;
-    }))
+    }).catch(() => caches.match(e.request))
   );
 });
