@@ -374,6 +374,8 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 .tsd-row{display:flex;align-items:baseline;gap:6px}
 .tsd-num{font-family:'Bebas Neue',sans-serif;font-size:4rem;line-height:1;color:#00e5ff;letter-spacing:.02em;transition:color .4s}
 .tsd-denom{font-size:.76rem;color:#3a5060;font-weight:600;margin-top:4px}
+.tsd-goal{font-size:.7rem;color:#6080a0;line-height:1.55;margin-top:8px;padding-top:8px;border-top:1px solid #1a1a3a;display:none}
+.tsd-goal.show{display:block}
 
 /* ── Metric Bars ── */
 .mbar{display:flex;align-items:center;gap:8px;padding:4px 0}
@@ -666,7 +668,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
     </div>
 
     <div id="mode-running">
-      <div class="rpsel">
+      <div class="rpsel" style="display:none">
         <span>解析対象：</span>
         <button class="rb"        id="sel-left"  onclick="setPanel('left')">動画 A</button>
         <button class="rb active" id="sel-right" onclick="setPanel('right')">動画 B</button>
@@ -727,6 +729,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
                 <div class="tsd-num" id="tsd-num">--</div>
                 <div class="tsd-denom">/ 100 pts</div>
               </div>
+              <div class="tsd-goal" id="tsd-goal"></div>
             </div>
             <div id="metric-grid"></div>
           </div>
@@ -2114,16 +2117,20 @@ function renderAdvice(m){
   const g=getRunType(),rt=g?g.def:RUN_TYPES.middle,tn=g?`【${rt.label}向け】`:'';
   // 体幹の安定性（ばらつき）のみ追加
   if(m.trunk?.dev>8)items.push({t:'warn',text:`体幹の角度にブレがあります（ばらつき${m.trunk.dev.toFixed(1)}°）。腹筋・背筋を意識して上半身を安定させましょう。`});
-  // 総合ゴールサマリー
-  if(g){
-    const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);
-    if(allSc.length){
-      const ov=Math.round(mn(allSc));
-      const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、スコアの低い項目から優先して改善しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを強化しましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離には省エネフォームが最重要です。上下動と着地位置を特に意識して。`;
-      items.push({t:ov>=80?'good':ov>=60?'warn':'bad',text:`【総合スコア ${ov}%】${pn}`});
+  // 総合ゴールサマリー → TOTAL SCORE 欄に表示
+  const goalEl=document.getElementById('tsd-goal');
+  if(goalEl){
+    if(g){
+      const allSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);
+      if(allSc.length){
+        const pn=g.type==='middle'?`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の目標に向けて、スコアの低い項目から優先して改善しましょう。`:g.type==='sprint'?`スプリントペース（${g.paceStr}/km）に向けて爆発的な膝引き上げと力強い腕振りを強化しましょう。`:`${g.dist}km・${g.timeStr}（ペース${g.paceStr}/km）の長距離には省エネフォームが最重要です。上下動と着地位置を特に意識して。`;
+        goalEl.textContent=pn;goalEl.classList.add('show');
+      }
+    } else {
+      goalEl.textContent='';goalEl.classList.remove('show');
     }
   }
-  document.getElementById('run-advice').innerHTML=items.length?items.map(i=>`<div class="ai ${i.t==='good'?'':i.t}"><span class="aicon">${I[i.t]}</span><span>${i.text}</span></div>`).join(''):'<div class="advph">目標タイムを設定すると総合アドバイスが表示されます</div>';
+  document.getElementById('run-advice').innerHTML=items.length?items.map(i=>`<div class="ai ${i.t==='good'?'':i.t}"><span class="aicon">${I[i.t]}</span><span>${i.text}</span></div>`).join(''):'';
 }
 
 // ── Compare mode (real-time) ───────────────────────────────
