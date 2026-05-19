@@ -342,6 +342,9 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 .save-btn:hover{opacity:.9}
 .save-btn:disabled{opacity:.45;cursor:not-allowed}
 .save-btn.saved{background:linear-gradient(135deg,#607d8b,#455a64)}
+.share-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9px;border:none;background:linear-gradient(135deg,#1da1f2,#0d8ecf);color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;min-height:38px}
+.share-btn:hover{opacity:.9}
+.share-btn.copied{background:linear-gradient(135deg,#607d8b,#455a64)}
 .hist-open-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:9px;border:1px solid #2a2a5a;background:transparent;color:#8080b0;font-size:.82rem;cursor:pointer;transition:all .2s;min-height:38px}
 .hist-open-btn:hover{border-color:#00e5ff55;color:#00e5ff}
 /* History Modal */
@@ -736,6 +739,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
         </div>
         <div class="save-row" id="save-row" style="display:none">
           <button class="save-btn" id="save-btn" onclick="saveAnalysis()">💾 記録を保存</button>
+          <button class="share-btn" id="share-btn" onclick="shareResult()">📤 結果をシェア</button>
           <button class="hist-open-btn" onclick="showHistory()">📊 履歴を見る</button>
         </div>
         <div class="advsec">
@@ -1708,8 +1712,12 @@ function finishAnalysis(side){
     lastAnalysis=m;
     const saveRow=document.getElementById('save-row');
     const saveBtn=document.getElementById('save-btn');
+    const shareBtn=document.getElementById('share-btn');
     if(fbUser){saveRow.style.display='flex';saveBtn.disabled=false;saveBtn.textContent='💾 記録を保存';saveBtn.classList.remove('saved');}
-    else{saveRow.style.display='none';}
+    else{saveRow.style.display='flex';saveBtn.style.display='none';}
+    if(shareBtn){shareBtn.style.display='inline-flex';}
+    // 分析回数をFirestoreにカウント（管理者用）
+    if(fbDb){fbDb.collection('stats').doc('global').set({analysisCount:firebase.firestore.FieldValue.increment(1)},{merge:true}).catch(()=>{});}
     document.getElementById('state-done').scrollIntoView({behavior:'smooth',block:'start'});
   } else {
     // Non-active panel: silently analyze and store for comparison
@@ -2303,12 +2311,17 @@ function initFirebase(){
         loginBtn.style.display='none';
         userEl.style.display='flex';
         hint.style.display='none';
-        if(lastAnalysis)document.getElementById('save-row').style.display='flex';
+        const saveRow=document.getElementById('save-row');
+        const saveBtn=document.getElementById('save-btn');
+        if(lastAnalysis){saveRow.style.display='flex';if(saveBtn)saveBtn.style.display='';}
       }else{
         loginBtn.style.display='';
         userEl.style.display='none';
         hint.style.display='';
-        document.getElementById('save-row').style.display='none';
+        const saveRow=document.getElementById('save-row');
+        const saveBtn=document.getElementById('save-btn');
+        if(lastAnalysis){saveRow.style.display='flex';if(saveBtn)saveBtn.style.display='none';}
+        else{saveRow.style.display='none';}
       }
     });
   }catch(e){console.warn('Firebase init error',e);}
@@ -2321,6 +2334,29 @@ function signInGoogle(){
 function fbSignOut(){
   if(!fbAuth)return;
   fbAuth.signOut();
+}
+function shareResult(){
+  if(!lastAnalysis)return;
+  const m=lastAnalysis;
+  const validSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);
+  const total=validSc.length?Math.round(validSc.reduce((a,b)=>a+b,0)/validSc.length):null;
+  const scoreText=total!==null?`総合スコア ${total}点`:'分析完了';
+  const getLv=sc=>sc>=80?'GOOD':sc>=60?'OK':'NG';
+  const details=[
+    m.trunk?.score!=null?`体幹前傾 ${getLv(m.trunk.score)}`:'',
+    m.knee?.score!=null?`膝引き上げ ${getLv(m.knee.score)}`:'',
+    m.cad?.score!=null?`ケイデンス ${getLv(m.cad.score)}`:'',
+  ].filter(Boolean).join(' / ');
+  const appUrl='https://itsapieceofcake4-max.github.io/running-form-app/motion_capture_app.html';
+  const text=`🏃 RUNFORMで走りを分析しました！\n${scoreText}\n${details}\n\nAIがランニングフォームを7項目でスコア採点。あなたの走りも分析してみて！`;
+  const btn=document.getElementById('share-btn');
+  if(navigator.share){
+    navigator.share({title:'RUNFORM — ランニングフォーム分析',text,url:appUrl}).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(text+'\n'+appUrl).then(()=>{
+      if(btn){btn.textContent='✅ コピーしました！';btn.classList.add('copied');setTimeout(()=>{btn.textContent='📤 結果をシェア';btn.classList.remove('copied');},2500);}
+    }).catch(()=>alert(text+'\n'+appUrl));
+  }
 }
 async function saveAnalysis(){
   if(!fbUser||!lastAnalysis){alert('ログインしてから分析を実行してください');return;}

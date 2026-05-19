@@ -1,4 +1,4 @@
-const CACHE = 'running-form-v4';
+const CACHE = 'running-form-v5';
 const STATIC = ['./motion_capture_app.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
