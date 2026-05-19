@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUNFORM — AIがランニングフォームを7項目で採点。無料で使えるフォーム分析アプリ</title>
+<meta name="description" content="スマホで撮った走り動画をAIが解析。体幹前傾・膝引き上げ・ケイデンスなど7項目をスコア採点してアドバイス。無料・登録不要でブラウザだけで完結。">
+<meta name="keywords" content="ランニングフォーム,フォーム分析,AI,無料,ランニング,走り方,改善,スコア,体幹,ケイデンス,running form,analysis,AI,free">
+<link rel="canonical" href="https://itsapieceofcake4-max.github.io/running-form-app/">
+
+<!-- OGP -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://itsapieceofcake4-max.github.io/running-form-app/">
+<meta property="og:title" content="RUNFORM — AIがランニングフォームを採点">
+<meta property="og:description" content="スマホ動画をAIが解析。7項目スコア採点＋アドバイス。無料・登録不要。">
+<meta property="og:image" content="https://itsapieceofcake4-max.github.io/running-form-app/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RUNFORM — AIがランニングフォームを採点">
+<meta name="twitter:description" content="スマホ動画をAIが解析。7項目スコア採点＋アドバイス。無料・登録不要。">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "RUNFORM",
+  "url": "https://itsapieceofcake4-max.github.io/running-form-app/motion_capture_app.html",
+  "description": "AI-powered running form analyzer. Scores trunk lean, knee drive, cadence and 4 more metrics from a smartphone video.",
+  "applicationCategory": "SportsApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+  "inLanguage": ["ja", "en"]
+}
+</script>
+
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cyan:#00e5ff;--pink:#ff4081;--purple:#a78bfa;
+  --bg:#0d0d1f;--bg2:#12122a;--bg3:#1a1a3e;
+  --text:#e0e0ff;--sub:#6070a0;--border:#2a2a5a;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans JP','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:rgba(13,13,31,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.1em;background:linear-gradient(100deg,var(--cyan),var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-cta{padding:8px 20px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),#0091ea);color:#fff;font-size:.85rem;font-weight:700;transition:.2s}
+.nav-cta:hover{opacity:.85;transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{position:relative;text-align:center;padding:90px 24px 80px;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,#00e5ff0c,transparent),radial-gradient(ellipse 60% 50% at 80% 80%,#ff40810a,transparent);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;border:1px solid #00e5ff28;background:#00e5ff0a;font-size:.72rem;color:#00e5ffbb;letter-spacing:.12em;text-transform:uppercase;margin-bottom:22px}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(3.5rem,10vw,6.5rem);letter-spacing:.08em;line-height:.95;background:linear-gradient(100deg,var(--cyan) 0%,var(--purple) 40%,var(--pink) 75%,var(--cyan) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 6s linear infinite;margin-bottom:18px}
+@keyframes shimmer{0%{background-position:0% center}100%{background-position:200% center}}
+.hero-sub{font-size:clamp(1rem,2.5vw,1.25rem);color:var(--sub);margin-bottom:12px;letter-spacing:.04em}
+.hero-sub strong{color:var(--text)}
+.hero-keywords{font-size:.8rem;color:#3a4070;margin-bottom:36px}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:15px 34px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),#0091ea);color:#fff;font-size:1rem;font-weight:700;transition:.25s;box-shadow:0 4px 24px #00e5ff22}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px #00e5ff33}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:15px 28px;border-radius:10px;border:1px solid var(--border);color:var(--sub);font-size:1rem;font-weight:600;transition:.25s}
+.btn-secondary:hover{border-color:var(--cyan);color:var(--cyan)}
+.hero-note{margin-top:18px;font-size:.78rem;color:#3a4070}
+
+/* ── METRICS ── */
+.section{padding:72px 24px;max-width:960px;margin:0 auto}
+.section-label{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px}
+.section-title{font-size:clamp(1.5rem,4vw,2.2rem);font-weight:700;margin-bottom:14px}
+.section-desc{color:var(--sub);font-size:.95rem;line-height:1.8;max-width:640px}
+
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:36px}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 16px;transition:.2s}
+.metric-card:hover{border-color:#00e5ff44;transform:translateY(-2px)}
+.metric-icon{font-size:1.6rem;margin-bottom:8px}
+.metric-name{font-weight:700;font-size:.95rem;margin-bottom:5px}
+.metric-ideal{font-size:.75rem;color:var(--cyan);font-weight:600}
+.metric-desc{font-size:.78rem;color:var(--sub);margin-top:6px;line-height:1.6}
+
+/* ── SCORE LEVELS ── */
+.levels-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;text-align:center}
+.level-item{}
+.level-badge{display:inline-block;padding:6px 22px;border-radius:20px;font-size:1rem;font-weight:800;letter-spacing:.14em;margin-bottom:10px}
+.level-badge.good{background:#00e5ff22;color:var(--cyan);border:1px solid #00e5ff55}
+.level-badge.ok{background:#ffb30022;color:#ffb300;border:1px solid #ffb30055}
+.level-badge.ng{background:#ff408122;color:var(--pink);border:1px solid #ff408155}
+.level-score{font-size:.82rem;color:var(--sub);margin-bottom:6px}
+.level-desc{font-size:.8rem;color:#8090c0;line-height:1.6}
+
+/* ── STEPS ── */
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-top:36px;counter-reset:step}
+.step-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px 18px;position:relative;counter-increment:step}
+.step-card::before{content:counter(step);position:absolute;top:-14px;left:18px;width:28px;height:28px;background:linear-gradient(135deg,var(--cyan),#0091ea);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;line-height:28px;text-align:center}
+.step-title{font-weight:700;margin-bottom:8px;margin-top:4px}
+.step-desc{font-size:.82rem;color:var(--sub);line-height:1.7}
+
+/* ── FEATURES ── */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:36px}
+.feat{display:flex;gap:14px;align-items:flex-start;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px}
+.feat-icon{font-size:1.5rem;flex-shrink:0;margin-top:2px}
+.feat-title{font-weight:700;margin-bottom:4px;font-size:.95rem}
+.feat-desc{font-size:.8rem;color:var(--sub);line-height:1.65}
+
+/* ── EN SECTION ── */
+.en-section{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:72px 24px}
+.en-inner{max-width:780px;margin:0 auto;text-align:center}
+.en-tag{display:inline-block;padding:3px 12px;border-radius:20px;border:1px solid var(--purple);color:var(--purple);font-size:.7rem;letter-spacing:.1em;margin-bottom:16px}
+.en-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3rem);letter-spacing:.1em;margin-bottom:14px;background:linear-gradient(100deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.en-desc{color:var(--sub);font-size:.95rem;line-height:1.85;margin-bottom:28px}
+.en-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px}
+.en-metric-tag{padding:5px 14px;border-radius:20px;background:#00e5ff0a;border:1px solid #00e5ff28;color:#00e5ffaa;font-size:.75rem}
+
+/* ── CTA SECTION ── */
+.cta-section{text-align:center;padding:80px 24px;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,#00e5ff06,transparent);pointer-events:none}
+.cta-title{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:700;margin-bottom:12px}
+.cta-sub{color:var(--sub);margin-bottom:32px;font-size:.95rem}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:32px 24px;text-align:center;color:#2a3060;font-size:.78rem}
+footer a{color:#3a4070;transition:.2s}
+footer a:hover{color:var(--cyan)}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.1em;color:#2a3060;margin-bottom:8px}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 auto;max-width:960px}
+
+@media(max-width:600px){
+  nav{padding:12px 16px}
+  .hero{padding:64px 16px 56px}
+  .section{padding:52px 16px}
+  .levels-wrap{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">RUNFORM</span>
+  <a href="./motion_capture_app.html" class="nav-cta">🏃 今すぐ無料で試す</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🤖 AI Powered · 完全無料 · 登録不要</div>
+  <h1>RUNFORM</h1>
+  <p class="hero-sub"><strong>AIがランニングフォームを7項目で採点。</strong><br>スマホ動画を読み込むだけで、あなたの走りを数値化。</p>
+  <p class="hero-keywords">ランニングフォーム 分析 &nbsp;|&nbsp; AI 走り方 改善 &nbsp;|&nbsp; フォームチェック 無料</p>
+  <div class="hero-btns">
+    <a href="./motion_capture_app.html" class="btn-primary">🏃 無料で分析する</a>
+    <a href="#how-to-use" class="btn-secondary">使い方を見る</a>
+  </div>
+  <p class="hero-note">📱 ブラウザだけで完結 · インストール不要 · iOS / Android / PC 対応</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- METRICS -->
+<section class="section">
+  <div class="section-label">Analysis Metrics</div>
+  <h2 class="section-title">7つの指標でフォームをスコア化</h2>
+  <p class="section-desc">プロのランニングコーチが見る評価項目を、AIが自動で計測・採点します。数値で課題が一目でわかります。</p>
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon">🏃</div>
+      <div class="metric-name">体幹前傾角</div>
+      <div class="metric-ideal">理想：5〜15°</div>
+      <div class="metric-desc">重力を推進力に変える省エネ走りの基本</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">🦵</div>
+      <div class="metric-name">膝の引き上げ</div>
+      <div class="metric-ideal">理想：40°以上</div>
+      <div class="metric-desc">歩幅とスピードに直結。スプリントの鍵</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">💪</div>
+      <div class="metric-name">腕振り角度</div>
+      <div class="metric-ideal">理想：肘90°</div>
+      <div class="metric-desc">リズムとバランスを安定させる上半身動作</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">👟</div>
+      <div class="metric-name">着地位置</div>
+      <div class="metric-ideal">重心の真下が理想</div>
+      <div class="metric-desc">オーバーストライドは膝痛の主原因</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">🦴</div>
+      <div class="metric-name">着地時膝屈曲</div>
+      <div class="metric-ideal">理想：15〜35°</div>
+      <div class="metric-desc">曲げることで衝撃を吸収しケガを防ぐ</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">⬆️</div>
+      <div class="metric-name">上下動</div>
+      <div class="metric-ideal">体高比 4%以下</div>
+      <div class="metric-desc">縦方向のムダを減らして前進効率を上げる</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">🎵</div>
+      <div class="metric-name">ケイデンス</div>
+      <div class="metric-ideal">理想：170〜190 spm</div>
+      <div class="metric-desc">高いほど膝への衝撃が分散し怪我を防ぐ</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SCORING -->
+<section class="section">
+  <div class="section-label">Scoring System</div>
+  <h2 class="section-title">GOOD / OK / NG で一目でわかる</h2>
+  <p class="section-desc">各指標のスコアを3段階に色分け。どこを直せばいいか、すぐに分かります。</p>
+  <div class="levels-wrap">
+    <div class="level-item">
+      <div class="level-badge good">GOOD</div>
+      <div class="level-score">80点以上</div>
+      <div class="level-desc">理想的なフォーム。<br>この動きを維持しよう</div>
+    </div>
+    <div class="level-item">
+      <div class="level-badge ok">OK</div>
+      <div class="level-score">60〜79点</div>
+      <div class="level-desc">概ね問題なし。<br>少し意識して改善を</div>
+    </div>
+    <div class="level-item">
+      <div class="level-badge ng">NG</div>
+      <div class="level-score">60点未満</div>
+      <div class="level-desc">改善が必要。<br>アドバイスに従って練習</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW TO USE -->
+<section class="section" id="how-to-use">
+  <div class="section-label">How to Use</div>
+  <h2 class="section-title">使い方は3ステップ</h2>
+  <p class="section-desc">難しい設定は一切不要。スマホで撮った動画をそのまま使えます。</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-title">動画を用意する</div>
+      <div class="step-desc">走っている横姿をスマホで撮影。または既存の動画ファイルでもOK。5〜7m離れて全身が映るように撮るのがコツ。</div>
+    </div>
+    <div class="step-card">
+      <div class="step-title">ブラウザで読み込む</div>
+      <div class="step-desc">アプリを開いて動画をセット。再生すると自動でAI骨格検出が始まります。インストール不要、ブラウザだけで完結。</div>
+    </div>
+    <div class="step-card">
+      <div class="step-title">スコアとアドバイスを確認</div>
+      <div class="step-desc">7項目のスコアとGOOD/OK/NGラベルが表示。AIが具体的な改善アドバイスを提示します。</div>
+    </div>
+    <div class="step-card">
+      <div class="step-title">記録して成長を追う</div>
+      <div class="step-desc">Googleでログインして結果を保存。過去の分析との比較で自分の成長がわかります。</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section class="section">
+  <div class="section-label">Features</div>
+  <h2 class="section-title">選ばれる理由</h2>
+  <div class="features-grid">
+    <div class="feat">
+      <div class="feat-icon">🆓</div>
+      <div><div class="feat-title">完全無料・登録不要</div><div class="feat-desc">Googleログインなしでも分析できます。保存機能を使う場合のみアカウントが必要。</div></div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📱</div>
+      <div><div class="feat-title">スマホ・PC どちらでも</div><div class="feat-desc">iOS / Android / Windows / Mac。どのデバイスのブラウザでも動作します。</div></div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🤖</div>
+      <div><div class="feat-title">Google MediaPipe AI</div><div class="feat-desc">Googleが開発した高精度ポーズ検出AIで、33点の骨格をリアルタイム解析。</div></div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🎯</div>
+      <div><div class="feat-title">目標ペース別アドバイス</div><div class="feat-desc">短距離・中距離・長距離でアドバイスが変化。目標レースに合わせた分析が可能。</div></div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📸</div>
+      <div><div class="feat-title">リアルタイム録画・分析</div><div class="feat-desc">カメラタブから直接録画して即座に分析。ジムや公園でその場でチェックできます。</div></div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📊</div>
+      <div><div class="feat-title">分析履歴で成長を可視化</div><div class="feat-desc">保存した結果を時系列で確認。練習の成果がスコアの変化として見えてきます。</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EN SECTION -->
+<div class="en-section">
+  <div class="en-inner">
+    <div class="en-tag">🌍 ENGLISH</div>
+    <h2 class="en-title">AI Running Form Analyzer</h2>
+    <p class="en-desc">
+      <strong>RUNFORM</strong> uses AI to analyze your running technique from a smartphone video.<br>
+      7 biomechanical metrics are scored and rated <strong style="color:#00e5ff">GOOD</strong> / <strong style="color:#ffb300">OK</strong> / <strong style="color:#ff4081">NG</strong> — no coaching experience required.<br>
+      Free, no installation, works in any browser.
+    </p>
+    <div class="en-metrics">
+      <span class="en-metric-tag">Trunk Lean</span>
+      <span class="en-metric-tag">Knee Drive</span>
+      <span class="en-metric-tag">Arm Swing</span>
+      <span class="en-metric-tag">Landing Position</span>
+      <span class="en-metric-tag">Landing Knee Flex</span>
+      <span class="en-metric-tag">Vert. Oscillation</span>
+      <span class="en-metric-tag">Cadence</span>
+    </div>
+    <a href="./motion_capture_app.html" class="btn-primary" style="display:inline-flex">🏃 Analyze My Running Form — Free</a>
+    <p style="margin-top:14px;font-size:.78rem;color:#3a4070">No sign-up required · Works on iOS, Android, PC · Powered by Google MediaPipe AI</p>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title">あなたの走りを、データで磨こう。</h2>
+  <p class="cta-sub">今日の分析が、明日の自己ベストへの一歩になります。</p>
+  <a href="./motion_capture_app.html" class="btn-primary">🏃 今すぐ無料で分析する</a>
+  <p style="margin-top:16px;font-size:.78rem;color:#2a3060">登録不要 · ブラウザだけで完結 · 完全無料</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">RUNFORM</div>
+  <p>AI-powered running form analysis · あなたの走りを、データで磨く。</p>
+  <p style="margin-top:8px">
+    <a href="./motion_capture_app.html">アプリを開く</a>
+    &nbsp;·&nbsp;
+    <a href="./motion_capture_app.html?lang=en">Open App (EN)</a>
+  </p>
+  <p style="margin-top:12px">© 2025 RUNFORM · Built with Google MediaPipe</p>
+</footer>
+
+</body>
+</html>

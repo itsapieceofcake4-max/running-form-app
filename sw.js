@@ -1,5 +1,5 @@
-const CACHE = 'running-form-v6';
-const STATIC = ['./motion_capture_app.html', './manifest.json', './icon.svg'];
+const CACHE = 'running-form-v7';
+const STATIC = ['./index.html', './motion_capture_app.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
