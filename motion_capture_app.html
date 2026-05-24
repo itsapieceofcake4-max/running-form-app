@@ -299,6 +299,30 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
 /* ── Feedback Button ── */
 .feedback-btn{position:fixed;bottom:20px;right:20px;z-index:2000;background:linear-gradient(135deg,#1a1a3e,#0d0d2b);border:1px solid #ff408155;border-radius:24px;color:#ff8fb0;font-size:.78rem;font-weight:600;padding:9px 16px;cursor:pointer;transition:all .25s;box-shadow:0 2px 12px rgba(255,64,129,.15);letter-spacing:.03em;text-decoration:none;display:flex;align-items:center;gap:6px}
 .feedback-btn:hover{background:linear-gradient(135deg,#ff408122,#1a1a3e);border-color:#ff4081aa;color:#ff4081;box-shadow:0 4px 20px rgba(255,64,129,.3);transform:translateY(-2px)}
+/* ── Summary Modal ── */
+.summary-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:3000;overflow-y:auto;padding:16px 12px}
+.summary-modal.show{display:flex;flex-direction:column;align-items:center}
+.summary-box{background:#12122a;border:1px solid #2a2a5a;border-radius:16px;width:100%;max-width:520px;margin:auto;overflow:hidden}
+.summary-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#1a1a3e;border-bottom:1px solid #2a2a5a}
+.summary-hd h3{font-size:.95rem;font-weight:700}
+.summary-close{background:none;border:none;color:#6080a0;font-size:1.1rem;cursor:pointer;padding:4px 8px}
+.summary-close:hover{color:#e0e0ff}
+.summary-canvas-wrap{padding:16px;background:#0a0a1f;display:flex;justify-content:center}
+.summary-canvas-wrap canvas{width:100%;max-width:480px;height:auto;border-radius:10px;display:block}
+.summary-actions{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.summary-dl-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:9px;background:linear-gradient(135deg,#1a1a4e,#2a2a5e);border:1px solid #3a3a7a;color:#c0c8f0;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;width:100%}
+.summary-dl-btn:hover{border-color:#00e5ff55;color:#00e5ff}
+.sns-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.sns-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:10px;border:1px solid #2a2a5a;background:#0a0a1f;cursor:pointer;transition:.2s;font-size:.68rem;color:#8090b0;font-weight:600}
+.sns-btn:hover{transform:translateY(-2px)}
+.sns-icon{font-size:1.5rem;line-height:1}
+.sns-x{border-color:#1d9bf044}.sns-x:hover{background:#1d9bf015;border-color:#1d9bf0;color:#1d9bf0}
+.sns-line{border-color:#06c75544}.sns-line:hover{background:#06c75515;border-color:#06c755;color:#06c755}
+.sns-insta{border-color:#e1306c44}.sns-insta:hover{background:#e1306c15;border-color:#e1306c;color:#e1306c}
+.sns-fb{border-color:#1877f244}.sns-fb:hover{background:#1877f215;border-color:#1877f2;color:#1877f2}
+.sns-copy{border-color:#a78bfa44}.sns-copy:hover{background:#a78bfa15;border-color:#a78bfa;color:#a78bfa}
+.sns-copy.copied{background:#a78bfa22;border-color:#a78bfa;color:#a78bfa}
+.summary-note{font-size:.72rem;color:#404060;text-align:center;padding:0 18px 14px}
 /* ── Help Modal ── */
 .help-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;overflow-y:auto;padding:16px 12px}
 .help-modal.show{display:flex;flex-direction:column;align-items:center}
@@ -742,7 +766,7 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
         </div>
         <div class="save-row" id="save-row" style="display:none">
           <button class="save-btn" id="save-btn" onclick="saveAnalysis()" data-i18n="btn.save">💾 記録を保存</button>
-          <button class="share-btn" id="share-btn" onclick="shareResult()" data-i18n="btn.share">📤 結果をシェア</button>
+          <button class="share-btn" id="share-btn" onclick="showSummary()" data-i18n="btn.share">📤 結果をシェア</button>
           <button class="hist-open-btn" id="hist-view-btn" onclick="showHistory()" data-i18n="btn.history.view">📊 履歴を見る</button>
         </div>
         <div class="advsec">
@@ -801,6 +825,30 @@ input[type="range"]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;b
       <button class="help-close" onclick="closeHelp()">✕</button>
     </div>
     <div class="help-body" id="help-body-content"></div>
+  </div>
+</div>
+
+<!-- Summary Modal -->
+<div class="summary-modal" id="summary-modal">
+  <div class="summary-box">
+    <div class="summary-hd">
+      <h3 id="summary-modal-title">📊 結果サマリー</h3>
+      <button class="summary-close" onclick="closeSummary()">✕</button>
+    </div>
+    <div class="summary-canvas-wrap">
+      <canvas id="summary-canvas" width="1080" height="1080"></canvas>
+    </div>
+    <div class="summary-actions">
+      <button class="summary-dl-btn" onclick="downloadSummary()">⬇️ <span id="summary-dl-label">画像を保存</span></button>
+      <div class="sns-grid">
+        <button class="sns-btn sns-x" onclick="shareToX()"><span class="sns-icon">𝕏</span><span>X</span></button>
+        <button class="sns-btn sns-line" onclick="shareToLine()"><span class="sns-icon">💬</span><span>LINE</span></button>
+        <button class="sns-btn sns-insta" onclick="downloadForInstagram()"><span class="sns-icon">📸</span><span>Instagram</span></button>
+        <button class="sns-btn sns-fb" onclick="shareToFb()"><span class="sns-icon">f</span><span>Facebook</span></button>
+        <button class="sns-btn sns-copy" id="sns-copy-btn" onclick="copySummaryText()"><span class="sns-icon">🔗</span><span id="sns-copy-label">コピー</span></button>
+      </div>
+    </div>
+    <p class="summary-note" id="summary-note">📸 Instagramは画像を保存してからアプリで投稿してください</p>
   </div>
 </div>
 
@@ -2418,6 +2466,7 @@ function toggleFaq(el){
   if(!isOpen){a.classList.add('open');el.querySelector('span:last-child').textContent='－';}
 }
 document.getElementById('help-modal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeHelp();});
+document.getElementById('summary-modal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeSummary();});
 // ── Comparison ─────────────────────────────────────────────
 const analysisResults={left:null,right:null};
 const CMP_KEYS=[
@@ -2551,37 +2600,263 @@ function fbSignOut(){
   if(!fbAuth)return;
   fbAuth.signOut();
 }
-function shareResult(){
-  if(!lastAnalysis)return;
+/* ── Summary Card & SNS Share ── */
+function _getSummaryData(){
+  if(!lastAnalysis)return null;
   const m=lastAnalysis;
-  const validSc=[m.trunk?.score,m.knee?.score,m.arm?.score,m.overstride?.score,m.landingKnee?.score,m.vert?.score,m.cad?.score].filter(v=>v!=null);
+  const metrics=[
+    {key:'trunk',    ja:'体幹前傾角',   en:'Trunk Lean',    sc:m.trunk?.score},
+    {key:'knee',     ja:'膝の引き上げ', en:'Knee Drive',    sc:m.knee?.score},
+    {key:'cad',      ja:'ケイデンス',   en:'Cadence',       sc:m.cad?.score},
+    {key:'landing',  ja:'着地位置',     en:'Landing Pos.',  sc:m.overstride?.score},
+    {key:'arm',      ja:'腕振り角度',   en:'Arm Swing',     sc:m.arm?.score},
+    {key:'vert',     ja:'上下動',       en:'Vert. Osc.',    sc:m.vert?.score},
+    {key:'lknee',    ja:'着地膝角度',   en:'Landing Knee',  sc:m.landingKnee?.score},
+  ];
+  const validSc=metrics.map(x=>x.sc).filter(v=>v!=null);
   const total=validSc.length?Math.round(validSc.reduce((a,b)=>a+b,0)/validSc.length):null;
-  const getLv=sc=>sc>=80?'GOOD':sc>=60?'OK':'NG';
-  const details=[
-    m.trunk?.score!=null?`体幹前傾 ${getLv(m.trunk.score)}`:'',
-    m.knee?.score!=null?`膝引き上げ ${getLv(m.knee.score)}`:'',
-    m.cad?.score!=null?`ケイデンス ${getLv(m.cad.score)}`:'',
-  ].filter(Boolean).join(' / ');
+  return {metrics,total};
+}
+function _getLv(sc){return sc>=80?'GOOD':sc>=60?'OK':'NG';}
+function _lvColor(sc){return sc>=80?'#00e5ff':sc>=60?'#ffb300':'#ff4081';}
+
+function generateSummaryCanvas(){
+  const data=_getSummaryData();
+  if(!data)return;
+  const {metrics,total}=data;
+  const cv=document.getElementById('summary-canvas');
+  const ctx=cv.getContext('2d');
+  const W=1080,H=1080;
+  cv.width=W;cv.height=H;
+
+  // Background
+  ctx.fillStyle='#0d0d1f';
+  ctx.fillRect(0,0,W,H);
+
+  // Subtle glow top-left
+  const grd1=ctx.createRadialGradient(200,200,0,200,200,500);
+  grd1.addColorStop(0,'rgba(0,229,255,0.07)');
+  grd1.addColorStop(1,'transparent');
+  ctx.fillStyle=grd1;ctx.fillRect(0,0,W,H);
+
+  // Glow bottom-right
+  const grd2=ctx.createRadialGradient(900,900,0,900,900,500);
+  grd2.addColorStop(0,'rgba(167,139,250,0.07)');
+  grd2.addColorStop(1,'transparent');
+  ctx.fillStyle=grd2;ctx.fillRect(0,0,W,H);
+
+  // Header bar
+  ctx.fillStyle='#12122a';
+  ctx.fillRect(0,0,W,160);
+
+  // Header border line gradient
+  const hline=ctx.createLinearGradient(0,160,W,160);
+  hline.addColorStop(0,'transparent');
+  hline.addColorStop(0.3,'#00e5ff44');
+  hline.addColorStop(0.5,'#a78bfa44');
+  hline.addColorStop(0.7,'#ff408133');
+  hline.addColorStop(1,'transparent');
+  ctx.strokeStyle=hline;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,160);ctx.lineTo(W,160);ctx.stroke();
+
+  // RUNFORM logo text
+  const logoGrd=ctx.createLinearGradient(60,0,600,0);
+  logoGrd.addColorStop(0,'#00e5ff');
+  logoGrd.addColorStop(0.45,'#a78bfa');
+  logoGrd.addColorStop(0.8,'#ff4081');
+  ctx.fillStyle=logoGrd;
+  ctx.font='bold 110px "Bebas Neue", Impact, sans-serif';
+  ctx.letterSpacing='8px';
+  ctx.fillText('RUNFORM',60,130);
+
+  // Badge top-right
+  ctx.fillStyle='#00e5ff08';
+  ctx.strokeStyle='#00e5ff28';ctx.lineWidth=1;
+  roundRect(ctx,760,44,260,50,25);
+  ctx.fill();ctx.stroke();
+  ctx.fillStyle='#00e5ffaa';
+  ctx.font='500 22px sans-serif';
+  ctx.fillText('🤖 AI POWERED · FREE',772,78);
+
+  // Total score section
+  const totalY=230;
+  // Circle bg
+  ctx.beginPath();
+  ctx.arc(W/2,totalY+80,110,0,Math.PI*2);
+  ctx.fillStyle='#12122a';
+  ctx.fill();
+  ctx.strokeStyle='#2a2a5a';ctx.lineWidth=2;ctx.stroke();
+
+  // Conic arc for score
+  if(total!=null){
+    const pct=total/100;
+    const start=-Math.PI/2;
+    const end=start+pct*Math.PI*2;
+    ctx.beginPath();
+    ctx.arc(W/2,totalY+80,110,start,end);
+    ctx.lineTo(W/2,totalY+80);
+    ctx.closePath();
+    const arcGrd=ctx.createLinearGradient(W/2-110,totalY,W/2+110,totalY+160);
+    arcGrd.addColorStop(0,'#00e5ff');
+    arcGrd.addColorStop(1,'#a78bfa');
+    ctx.fillStyle=arcGrd;
+    ctx.fill();
+    // Inner circle
+    ctx.beginPath();
+    ctx.arc(W/2,totalY+80,88,0,Math.PI*2);
+    ctx.fillStyle='#0d0d1f';
+    ctx.fill();
+  }
+  // Total score number
+  if(total!=null){
+    ctx.fillStyle='#00e5ff';
+    ctx.font='bold 96px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(total,W/2,totalY+105);
+    ctx.fillStyle='#6070a0';
+    ctx.font='500 26px sans-serif';
+    ctx.fillText(LANG==='en'?'TOTAL SCORE':'総合スコア',W/2,totalY+142);
+  }
+  ctx.textAlign='left';
+
+  // Metric cards grid (2 columns x 4 rows max, 7 items)
+  const cardW=460,cardH=90,gap=18,startX=54,startY=520;
+  metrics.forEach((mt,i)=>{
+    if(mt.sc==null)return;
+    const col=i%2;
+    const row=Math.floor(i/2);
+    const x=startX+col*(cardW+gap);
+    const y=startY+row*(cardH+gap);
+    const sc=mt.sc;
+    const lv=_getLv(sc);
+    const col_=_lvColor(sc);
+
+    // Card bg
+    ctx.fillStyle='#12122a';
+    roundRect(ctx,x,y,cardW,cardH,14);ctx.fill();
+    ctx.strokeStyle='#2a2a5a';ctx.lineWidth=1;
+    roundRect(ctx,x,y,cardW,cardH,14);ctx.stroke();
+
+    // Left accent bar
+    ctx.fillStyle=col_;
+    ctx.globalAlpha=0.7;
+    roundRect(ctx,x,y+14,5,cardH-28,3);ctx.fill();
+    ctx.globalAlpha=1;
+
+    // Metric name
+    ctx.fillStyle='#a0b0d0';
+    ctx.font='500 24px sans-serif';
+    ctx.fillText(LANG==='en'?mt.en:mt.ja,x+26,y+36);
+
+    // Score number
+    ctx.fillStyle=col_;
+    ctx.font='bold 44px sans-serif';
+    ctx.fillText(sc,x+26,y+78);
+
+    // /100
+    ctx.fillStyle='#404060';
+    ctx.font='500 22px sans-serif';
+    ctx.fillText('/100',x+26+ctx.measureText(sc).width+6,y+78);
+
+    // Level badge
+    const lvW=110,lvH=36,lvX=x+cardW-lvW-18,lvY=y+cardH/2-18;
+    ctx.fillStyle=col_+'18';
+    ctx.strokeStyle=col_+'55';ctx.lineWidth=1;
+    roundRect(ctx,lvX,lvY,lvW,lvH,18);ctx.fill();ctx.stroke();
+    ctx.fillStyle=col_;
+    ctx.font='bold 22px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(lv,lvX+lvW/2,lvY+25);
+    ctx.textAlign='left';
+  });
+
+  // Footer
+  ctx.fillStyle='#1a1a3e';
+  ctx.fillRect(0,H-80,W,80);
+  ctx.strokeStyle='#2a2a5a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H-80);ctx.lineTo(W,H-80);ctx.stroke();
+  ctx.fillStyle='#3a4878';
+  ctx.font='500 26px sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('🔗 itsapieceofcake4-max.github.io/running-form-app',W/2,H-28);
+  ctx.textAlign='left';
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function showSummary(){
+  if(!lastAnalysis){alert(t('msg.no.analysis')||'先に動画を分析してください');return;}
+  // Update modal text for current language
+  const titleEl=document.getElementById('summary-modal-title');
+  const dlEl=document.getElementById('summary-dl-label');
+  const copyEl=document.getElementById('sns-copy-label');
+  const noteEl=document.getElementById('summary-note');
+  if(titleEl)titleEl.textContent=LANG==='en'?'📊 Results Summary':'📊 結果サマリー';
+  if(dlEl)dlEl.textContent=LANG==='en'?'Save Image':'画像を保存';
+  if(copyEl)copyEl.textContent=LANG==='en'?'Copy':'コピー';
+  if(noteEl)noteEl.textContent=LANG==='en'?'📸 For Instagram: save the image then post from the app':'📸 Instagramは画像を保存してからアプリで投稿してください';
+  generateSummaryCanvas();
+  document.getElementById('summary-modal').classList.add('show');
+}
+function closeSummary(){
+  document.getElementById('summary-modal').classList.remove('show');
+}
+function downloadSummary(){
+  const cv=document.getElementById('summary-canvas');
+  const a=document.createElement('a');
+  a.download='runform_result.png';
+  a.href=cv.toDataURL('image/png');
+  a.click();
+}
+function downloadForInstagram(){downloadSummary();}
+
+function _summaryText(){
+  const data=_getSummaryData();
+  if(!data)return'';
+  const {metrics,total}=data;
   const appUrl='https://itsapieceofcake4-max.github.io/running-form-app/motion_capture_app.html';
-  const scoreLabel=LANG==='en'?`Total Score: ${total} pts`:`総合スコア ${total}点`;
-  const detailsEn=[
-    m.trunk?.score!=null?`Trunk ${getLv(m.trunk.score)}`:'',
-    m.knee?.score!=null?`Knee Drive ${getLv(m.knee.score)}`:'',
-    m.cad?.score!=null?`Cadence ${getLv(m.cad.score)}`:'',
-  ].filter(Boolean).join(' / ');
-  const detailsStr=LANG==='en'?detailsEn:details;
-  const introText=LANG==='en'?`🏃 I analyzed my running form with RUNFORM!\n${scoreLabel}\n${detailsStr}\n\nAI scores your running form across 7 metrics. Try it yourself!`
-    :`🏃 RUNFORMで走りを分析しました！\n総合スコア ${total}点\n${details}\n\nAIがランニングフォームを7項目でスコア採点。あなたの走りも分析してみて！`;
-  const shareTitle=LANG==='en'?'RUNFORM — Running Form Analysis':'RUNFORM — ランニングフォーム分析';
-  const btn=document.getElementById('share-btn');
-  if(navigator.share){
-    navigator.share({title:shareTitle,text:introText,url:appUrl}).catch(()=>{});
+  if(LANG==='en'){
+    const lines=metrics.filter(m=>m.sc!=null).map(m=>`${m.en}: ${m.sc}/100 (${_getLv(m.sc)})`).join('\n');
+    return `🏃 I analyzed my running form with RUNFORM!\n\n🏅 Total Score: ${total}/100\n\n${lines}\n\nAI scores your running form across 7 metrics. Try it free!\n${appUrl}`;
   } else {
-    navigator.clipboard.writeText(introText+'\n'+appUrl).then(()=>{
-      if(btn){btn.textContent=t('btn.share.copied');btn.classList.add('copied');setTimeout(()=>{btn.textContent=t('btn.share');btn.classList.remove('copied');},2500);}
-    }).catch(()=>alert(introText+'\n'+appUrl));
+    const lines=metrics.filter(m=>m.sc!=null).map(m=>`${m.ja}: ${m.sc}/100 (${_getLv(m.sc)})`).join('\n');
+    return `🏃 RUNFORMで走りを分析しました！\n\n🏅 総合スコア: ${total}/100\n\n${lines}\n\nAIがランニングフォームを7項目でスコア採点。無料で試せます！\n${appUrl}`;
   }
 }
+function shareToX(){
+  const text=_summaryText();
+  const url='https://twitter.com/intent/tweet?text='+encodeURIComponent(text);
+  window.open(url,'_blank');
+}
+function shareToLine(){
+  const text=_summaryText();
+  const url='https://line.me/R/msg/text/?'+encodeURIComponent(text);
+  window.open(url,'_blank');
+}
+function shareToFb(){
+  const appUrl='https://itsapieceofcake4-max.github.io/running-form-app/motion_capture_app.html';
+  const url='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(appUrl);
+  window.open(url,'_blank');
+}
+function copySummaryText(){
+  const text=_summaryText();
+  const btn=document.getElementById('sns-copy-btn');
+  const lbl=document.getElementById('sns-copy-label');
+  navigator.clipboard.writeText(text).then(()=>{
+    if(lbl)lbl.textContent=LANG==='en'?'Copied!':'コピー済';
+    if(btn)btn.classList.add('copied');
+    setTimeout(()=>{if(lbl)lbl.textContent=LANG==='en'?'Copy':'コピー';if(btn)btn.classList.remove('copied');},2000);
+  }).catch(()=>{alert(text);});
+}
+function shareResult(){showSummary();} // legacy alias
 async function saveAnalysis(){
   if(!fbUser||!lastAnalysis){alert('ログインしてから分析を実行してください');return;}
   const btn=document.getElementById('save-btn');
