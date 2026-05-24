@@ -1869,6 +1869,11 @@ function finishAnalysis(side){
     showStateDone(h.length,m.camAngle,m.vertBias);
     const scores=[m.trunk?.score??null,m.knee?.score??null,m.arm?.score??null,m.overstride?.score??null,m.landingKnee?.score??null,m.vert?.score??null,m.cad?.score??null];
     drawRadar(scores);renderCards(m);renderAdvice(m);
+    // 前回スコアを保存してから今回のスコアで上書き
+    if(lastAnalysis){
+      previousAnalysis=lastAnalysis;
+      try{const pv=lastAnalysis;localStorage.setItem('runform_prev_scores',JSON.stringify({trunk:pv.trunk?.score??null,knee:pv.knee?.score??null,arm:pv.arm?.score??null,overstride:pv.overstride?.score??null,landingKnee:pv.landingKnee?.score??null,vert:pv.vert?.score??null,cad:pv.cad?.score??null}));}catch(e){}
+    }
     lastAnalysis=m;
     const saveRow=document.getElementById('save-row');
     const saveBtn=document.getElementById('save-btn');
@@ -2559,7 +2564,7 @@ const FB_CFG={
   messagingSenderId:"372871685665",
   appId:"1:372871685665:web:ec4f1639a9f7d01c7fa560"
 };
-let fbApp,fbAuth,fbDb,fbUser=null,lastAnalysis=null;
+let fbApp,fbAuth,fbDb,fbUser=null,lastAnalysis=null,previousAnalysis=null;
 function initFirebase(){
   try{
     fbApp=firebase.initializeApp(FB_CFG);
@@ -2629,156 +2634,171 @@ function generateSummaryCanvas(){
   const W=1080,H=1080;
   cv.width=W;cv.height=H;
 
-  // Background
-  ctx.fillStyle='#0d0d1f';
-  ctx.fillRect(0,0,W,H);
+  // 前回スコアを取得（セッション内 or localStorage）
+  let prevScores=null;
+  if(previousAnalysis){
+    prevScores={trunk:previousAnalysis.trunk?.score??null,knee:previousAnalysis.knee?.score??null,
+      arm:previousAnalysis.arm?.score??null,overstride:previousAnalysis.overstride?.score??null,
+      landingKnee:previousAnalysis.landingKnee?.score??null,vert:previousAnalysis.vert?.score??null,
+      cad:previousAnalysis.cad?.score??null};
+  } else {
+    try{const s=localStorage.getItem('runform_prev_scores');if(s)prevScores=JSON.parse(s);}catch(e){}
+  }
+  const prevKeyMap={trunk:'trunk',knee:'knee',arm:'arm',landing:'overstride',lknee:'landingKnee',vert:'vert',cad:'cad'};
 
-  // Subtle glow top-left
-  const grd1=ctx.createRadialGradient(200,200,0,200,200,500);
-  grd1.addColorStop(0,'rgba(0,229,255,0.07)');
-  grd1.addColorStop(1,'transparent');
+  // ── Background ──
+  ctx.fillStyle='#0d0d1f';ctx.fillRect(0,0,W,H);
+  const grd1=ctx.createRadialGradient(160,160,0,160,160,480);
+  grd1.addColorStop(0,'rgba(0,229,255,0.06)');grd1.addColorStop(1,'transparent');
   ctx.fillStyle=grd1;ctx.fillRect(0,0,W,H);
-
-  // Glow bottom-right
-  const grd2=ctx.createRadialGradient(900,900,0,900,900,500);
-  grd2.addColorStop(0,'rgba(167,139,250,0.07)');
-  grd2.addColorStop(1,'transparent');
+  const grd2=ctx.createRadialGradient(920,920,0,920,920,460);
+  grd2.addColorStop(0,'rgba(167,139,250,0.06)');grd2.addColorStop(1,'transparent');
   ctx.fillStyle=grd2;ctx.fillRect(0,0,W,H);
 
-  // Header bar
-  ctx.fillStyle='#12122a';
-  ctx.fillRect(0,0,W,160);
-
-  // Header border line gradient
-  const hline=ctx.createLinearGradient(0,160,W,160);
-  hline.addColorStop(0,'transparent');
-  hline.addColorStop(0.3,'#00e5ff44');
-  hline.addColorStop(0.5,'#a78bfa44');
-  hline.addColorStop(0.7,'#ff408133');
-  hline.addColorStop(1,'transparent');
+  // ── Header ──
+  ctx.fillStyle='#12122a';ctx.fillRect(0,0,W,156);
+  const hline=ctx.createLinearGradient(0,0,W,0);
+  hline.addColorStop(0,'transparent');hline.addColorStop(0.3,'#00e5ff55');
+  hline.addColorStop(0.5,'#a78bfa55');hline.addColorStop(0.7,'#ff408144');hline.addColorStop(1,'transparent');
   ctx.strokeStyle=hline;ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(0,160);ctx.lineTo(W,160);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,156);ctx.lineTo(W,156);ctx.stroke();
 
-  // RUNFORM logo text
-  const logoGrd=ctx.createLinearGradient(60,0,600,0);
-  logoGrd.addColorStop(0,'#00e5ff');
-  logoGrd.addColorStop(0.45,'#a78bfa');
-  logoGrd.addColorStop(0.8,'#ff4081');
+  // Logo
+  const logoGrd=ctx.createLinearGradient(54,0,700,0);
+  logoGrd.addColorStop(0,'#00e5ff');logoGrd.addColorStop(0.42,'#a78bfa');logoGrd.addColorStop(0.78,'#ff4081');
   ctx.fillStyle=logoGrd;
-  ctx.font='bold 110px "Bebas Neue", Impact, sans-serif';
-  ctx.letterSpacing='8px';
-  ctx.fillText('RUNFORM',60,130);
+  ctx.font='bold 108px Impact, sans-serif';
+  ctx.fillText('RUNFORM',54,124);
 
-  // Badge top-right
-  ctx.fillStyle='#00e5ff08';
-  ctx.strokeStyle='#00e5ff28';ctx.lineWidth=1;
-  roundRect(ctx,760,44,260,50,25);
-  ctx.fill();ctx.stroke();
-  ctx.fillStyle='#00e5ffaa';
-  ctx.font='500 22px sans-serif';
-  ctx.fillText('🤖 AI POWERED · FREE',772,78);
+  // Badge
+  const bdgX=720,bdgY=52,bdgW=310,bdgH=48;
+  roundRect(ctx,bdgX,bdgY,bdgW,bdgH,24);
+  ctx.fillStyle='rgba(0,229,255,0.06)';ctx.fill();
+  ctx.strokeStyle='rgba(0,229,255,0.22)';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='rgba(0,229,255,0.75)';ctx.font='600 21px sans-serif';
+  ctx.textAlign='center';ctx.fillText('AI POWERED  ·  FREE',bdgX+bdgW/2,bdgY+31);ctx.textAlign='left';
 
-  // Total score section
-  const totalY=230;
-  // Circle bg
-  ctx.beginPath();
-  ctx.arc(W/2,totalY+80,110,0,Math.PI*2);
-  ctx.fillStyle='#12122a';
-  ctx.fill();
+  // ── Score Ring ──
+  const cx=W/2,cy=310,R=112,r=90;
+  // Track ring
+  ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.fillStyle='#1a1a3e';ctx.fill();
   ctx.strokeStyle='#2a2a5a';ctx.lineWidth=2;ctx.stroke();
-
-  // Conic arc for score
+  // Progress arc
   if(total!=null){
-    const pct=total/100;
-    const start=-Math.PI/2;
-    const end=start+pct*Math.PI*2;
-    ctx.beginPath();
-    ctx.arc(W/2,totalY+80,110,start,end);
-    ctx.lineTo(W/2,totalY+80);
-    ctx.closePath();
-    const arcGrd=ctx.createLinearGradient(W/2-110,totalY,W/2+110,totalY+160);
-    arcGrd.addColorStop(0,'#00e5ff');
-    arcGrd.addColorStop(1,'#a78bfa');
-    ctx.fillStyle=arcGrd;
-    ctx.fill();
-    // Inner circle
-    ctx.beginPath();
-    ctx.arc(W/2,totalY+80,88,0,Math.PI*2);
-    ctx.fillStyle='#0d0d1f';
-    ctx.fill();
+    const sweep=(-Math.PI/2)+((total/100)*Math.PI*2);
+    const arcGrd=ctx.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
+    arcGrd.addColorStop(0,'#00e5ff');arcGrd.addColorStop(1,'#a78bfa');
+    ctx.beginPath();ctx.arc(cx,cy,R,-Math.PI/2,sweep);
+    ctx.lineTo(cx,cy);ctx.closePath();
+    ctx.fillStyle=arcGrd;ctx.fill();
+    // Inner cutout
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle='#0d0d1f';ctx.fill();
   }
-  // Total score number
+  // Score number
   if(total!=null){
-    ctx.fillStyle='#00e5ff';
-    ctx.font='bold 96px sans-serif';
     ctx.textAlign='center';
-    ctx.fillText(total,W/2,totalY+105);
-    ctx.fillStyle='#6070a0';
-    ctx.font='500 26px sans-serif';
-    ctx.fillText(LANG==='en'?'TOTAL SCORE':'総合スコア',W/2,totalY+142);
+    ctx.fillStyle='#00e5ff';ctx.font='bold 88px sans-serif';
+    ctx.fillText(total,cx,cy+28);
+    ctx.fillStyle='#5060a0';ctx.font='500 24px sans-serif';
+    ctx.fillText(LANG==='en'?'TOTAL SCORE':'総合スコア',cx,cy+62);
+    // 前回比較（リング下）
+    if(prevScores){
+      const prevVals=[prevScores.trunk,prevScores.knee,prevScores.arm,prevScores.overstride,prevScores.landingKnee,prevScores.vert,prevScores.cad].filter(v=>v!=null);
+      const prevTotal=prevVals.length?Math.round(prevVals.reduce((a,b)=>a+b,0)/prevVals.length):null;
+      if(prevTotal!=null){
+        const delta=total-prevTotal;
+        const deltaStr=delta>0?`▲ +${delta}`:delta<0?`▼ ${delta}`:`→ ±0`;
+        const dColor=delta>0?'#4caf50':delta<0?'#ff4081':'#6070a0';
+        ctx.fillStyle=dColor;ctx.font='600 24px sans-serif';
+        ctx.fillText((LANG==='en'?'vs last: ':'前回比: ')+deltaStr,cx,cy+94);
+      }
+    }
+    ctx.textAlign='left';
   }
-  ctx.textAlign='left';
 
-  // Metric cards grid (2 columns x 4 rows max, 7 items)
-  const cardW=460,cardH=90,gap=18,startX=54,startY=520;
+  // GOOD/OK/NG チップ
+  const validMets=metrics.filter(m=>m.sc!=null);
+  const goodN=validMets.filter(m=>m.sc>=80).length;
+  const okN=validMets.filter(m=>m.sc>=60&&m.sc<80).length;
+  const ngN=validMets.filter(m=>m.sc<60).length;
+  const chips=[{lbl:`GOOD ×${goodN}`,c:'#00e5ff'},{lbl:`OK ×${okN}`,c:'#ffb300'},{lbl:`NG ×${ngN}`,c:'#ff4081'}];
+  let chipX=210;const chipY=440,chipH=44;
+  chips.forEach(ch=>{
+    ctx.font='bold 22px sans-serif';
+    const tw=ctx.measureText(ch.lbl).width+36;
+    roundRect(ctx,chipX,chipY,tw,chipH,22);
+    ctx.fillStyle=ch.c+'18';ctx.fill();
+    ctx.strokeStyle=ch.c+'55';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=ch.c;ctx.textAlign='center';
+    ctx.fillText(ch.lbl,chipX+tw/2,chipY+28);ctx.textAlign='left';
+    chipX+=tw+14;
+  });
+
+  // ── Metric Cards ──
+  const cardW=488,cardH=118,gap=14,startX=44,startY=508;
   metrics.forEach((mt,i)=>{
     if(mt.sc==null)return;
-    const col=i%2;
-    const row=Math.floor(i/2);
+    const col=i%2,row=Math.floor(i/2);
     const x=startX+col*(cardW+gap);
     const y=startY+row*(cardH+gap);
-    const sc=mt.sc;
+    const sc=Math.round(mt.sc);
     const lv=_getLv(sc);
     const col_=_lvColor(sc);
+    const prevSc=prevScores?prevScores[prevKeyMap[mt.key]]:null;
+    const delta=prevSc!=null?sc-Math.round(prevSc):null;
 
     // Card bg
-    ctx.fillStyle='#12122a';
-    roundRect(ctx,x,y,cardW,cardH,14);ctx.fill();
+    roundRect(ctx,x,y,cardW,cardH,14);
+    ctx.fillStyle='#12122a';ctx.fill();
     ctx.strokeStyle='#2a2a5a';ctx.lineWidth=1;
     roundRect(ctx,x,y,cardW,cardH,14);ctx.stroke();
 
     // Left accent bar
-    ctx.fillStyle=col_;
-    ctx.globalAlpha=0.7;
-    roundRect(ctx,x,y+14,5,cardH-28,3);ctx.fill();
-    ctx.globalAlpha=1;
+    ctx.fillStyle=col_;ctx.globalAlpha=0.75;
+    roundRect(ctx,x,y+14,5,cardH-28,3);ctx.fill();ctx.globalAlpha=1;
 
     // Metric name
-    ctx.fillStyle='#a0b0d0';
-    ctx.font='500 24px sans-serif';
-    ctx.fillText(LANG==='en'?mt.en:mt.ja,x+26,y+36);
+    ctx.fillStyle='#8090b0';ctx.font='500 22px sans-serif';
+    ctx.fillText(LANG==='en'?mt.en:mt.ja,x+22,y+32);
 
-    // Score number
-    ctx.fillStyle=col_;
-    ctx.font='bold 44px sans-serif';
-    ctx.fillText(sc,x+26,y+78);
+    // Score number (rounded integer)
+    const scStr=String(sc);
+    ctx.fillStyle=col_;ctx.font='bold 52px sans-serif';
+    ctx.fillText(scStr,x+22,y+90);
 
     // /100
-    ctx.fillStyle='#404060';
+    ctx.fillStyle='#303050';ctx.font='500 22px sans-serif';
+    const scW=ctx.measureText(scStr).width;
+    ctx.font='bold 52px sans-serif';const scW2=ctx.measureText(scStr).width;
     ctx.font='500 22px sans-serif';
-    ctx.fillText('/100',x+26+ctx.measureText(sc).width+6,y+78);
+    ctx.fillText('/100',x+22+scW2+5,y+90);
+
+    // 前回差分
+    if(delta!=null&&delta!==0){
+      const dStr=delta>0?`▲+${delta}`:`▼${delta}`;
+      const dColor=delta>0?'#4caf50':'#ff4081';
+      ctx.fillStyle=dColor;ctx.font='600 20px sans-serif';
+      ctx.fillText(dStr,x+22+scW2+52,y+90);
+    }
 
     // Level badge
-    const lvW=110,lvH=36,lvX=x+cardW-lvW-18,lvY=y+cardH/2-18;
-    ctx.fillStyle=col_+'18';
-    ctx.strokeStyle=col_+'55';ctx.lineWidth=1;
-    roundRect(ctx,lvX,lvY,lvW,lvH,18);ctx.fill();ctx.stroke();
-    ctx.fillStyle=col_;
-    ctx.font='bold 22px sans-serif';
-    ctx.textAlign='center';
-    ctx.fillText(lv,lvX+lvW/2,lvY+25);
-    ctx.textAlign='left';
+    const lvW=100,lvH=34,lvX=x+cardW-lvW-16,lvY=y+14;
+    roundRect(ctx,lvX,lvY,lvW,lvH,17);
+    ctx.fillStyle=col_+'18';ctx.fill();
+    ctx.strokeStyle=col_+'55';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=col_;ctx.font='bold 21px sans-serif';
+    ctx.textAlign='center';ctx.fillText(lv,lvX+lvW/2,lvY+23);ctx.textAlign='left';
   });
 
-  // Footer
-  ctx.fillStyle='#1a1a3e';
-  ctx.fillRect(0,H-80,W,80);
+  // ── Footer ──
+  ctx.fillStyle='#111128';ctx.fillRect(0,H-76,W,76);
   ctx.strokeStyle='#2a2a5a';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(0,H-80);ctx.lineTo(W,H-80);ctx.stroke();
-  ctx.fillStyle='#3a4878';
-  ctx.font='500 26px sans-serif';
+  ctx.beginPath();ctx.moveTo(0,H-76);ctx.lineTo(W,H-76);ctx.stroke();
+  ctx.fillStyle='#3a4878';ctx.font='500 24px sans-serif';
   ctx.textAlign='center';
-  ctx.fillText('🔗 itsapieceofcake4-max.github.io/running-form-app',W/2,H-28);
+  ctx.fillText('itsapieceofcake4-max.github.io/running-form-app',W/2,H-26);
   ctx.textAlign='left';
 }
 
