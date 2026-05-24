@@ -2609,14 +2609,15 @@ function fbSignOut(){
 function _getSummaryData(){
   if(!lastAnalysis)return null;
   const m=lastAnalysis;
+  const rnd=v=>v!=null?Math.round(v):null;
   const metrics=[
-    {key:'trunk',    ja:'体幹前傾角',   en:'Trunk Lean',    sc:m.trunk?.score},
-    {key:'knee',     ja:'膝の引き上げ', en:'Knee Drive',    sc:m.knee?.score},
-    {key:'cad',      ja:'ケイデンス',   en:'Cadence',       sc:m.cad?.score},
-    {key:'landing',  ja:'着地位置',     en:'Landing Pos.',  sc:m.overstride?.score},
-    {key:'arm',      ja:'腕振り角度',   en:'Arm Swing',     sc:m.arm?.score},
-    {key:'vert',     ja:'上下動',       en:'Vert. Osc.',    sc:m.vert?.score},
-    {key:'lknee',    ja:'着地膝角度',   en:'Landing Knee',  sc:m.landingKnee?.score},
+    {key:'trunk',    ja:'体幹前傾角',   en:'Trunk Lean',    sc:rnd(m.trunk?.score)},
+    {key:'knee',     ja:'膝の引き上げ', en:'Knee Drive',    sc:rnd(m.knee?.score)},
+    {key:'cad',      ja:'ケイデンス',   en:'Cadence',       sc:rnd(m.cad?.score)},
+    {key:'landing',  ja:'着地位置',     en:'Landing Pos.',  sc:rnd(m.overstride?.score)},
+    {key:'arm',      ja:'腕振り角度',   en:'Arm Swing',     sc:rnd(m.arm?.score)},
+    {key:'vert',     ja:'上下動',       en:'Vert. Osc.',    sc:rnd(m.vert?.score)},
+    {key:'lknee',    ja:'着地膝角度',   en:'Landing Knee',  sc:rnd(m.landingKnee?.score)},
   ];
   const validSc=metrics.map(x=>x.sc).filter(v=>v!=null);
   const total=validSc.length?Math.round(validSc.reduce((a,b)=>a+b,0)/validSc.length):null;
@@ -2844,10 +2845,10 @@ function _summaryText(){
   const {metrics,total}=data;
   const appUrl='https://itsapieceofcake4-max.github.io/running-form-app/motion_capture_app.html';
   if(LANG==='en'){
-    const lines=metrics.filter(m=>m.sc!=null).map(m=>`${m.en}: ${m.sc}/100 (${_getLv(m.sc)})`).join('\n');
+    const lines=metrics.filter(m=>m.sc!=null).map(m=>`${m.en}: ${Math.round(m.sc)}/100 (${_getLv(Math.round(m.sc))})`).join('\n');
     return `🏃 I analyzed my running form with RUNFORM!\n\n🏅 Total Score: ${total}/100\n\n${lines}\n\nAI scores your running form across 7 metrics. Try it free!\n${appUrl}`;
   } else {
-    const lines=metrics.filter(m=>m.sc!=null).map(m=>`${m.ja}: ${m.sc}/100 (${_getLv(m.sc)})`).join('\n');
+    const lines=metrics.filter(m=>m.sc!=null).map(m=>`${m.ja}: ${Math.round(m.sc)}/100 (${_getLv(Math.round(m.sc))})`).join('\n');
     return `🏃 RUNFORMで走りを分析しました！\n\n🏅 総合スコア: ${total}/100\n\n${lines}\n\nAIがランニングフォームを7項目でスコア採点。無料で試せます！\n${appUrl}`;
   }
 }
